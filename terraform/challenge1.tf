@@ -12,6 +12,7 @@ resource "google_container_cluster" "gke-cluster-challenge-1" {
   # node pool and immediately delete it.
   remove_default_node_pool = true
   initial_node_count       = 1
+  deletion_protection      = false
 }
 
 resource "google_container_node_pool" "gke-node-pool" {
