@@ -1,3 +1,6 @@
+# Remove local file extensions
+**/.DS_Store**
+
 # Local .terraform directories
 **/.terraform/*
 

@@ -23,8 +23,6 @@ Steps to set up the challenge:
    `kubectl apply -f manifests/clusterRole.yaml`
    `kubectl apply -f manifests/clusterRoleBinding.yaml`
 
-
-
 # Cleaning up
 
 To remove the resources created in your cloud project run the `challenge-destroy.sh` script.
