@@ -20,8 +20,7 @@ resource "google_compute_instance" "default" {
   }
 
   metadata = {
-    ssh-keys = format("alice:%s", file("../leaked_ssh_key.pub"))
-    flag3 = "You found flag3!"
+    ssh-keys = format("alice:%s", file("../temporary_files/leaked_ssh_key.pub"))
   }
 
   service_account {
@@ -49,5 +48,5 @@ resource "google_secret_manager_secret" "ssh-secret-challenge3" {
 resource "google_secret_manager_secret_version" "ssh-secret-version-challenge3" {
   secret = google_secret_manager_secret.ssh-secret-challenge3.id
 
-  secret_data = file("../leaked_ssh_key")
+  secret_data = file("../temporary_files/leaked_ssh_key")
 }
