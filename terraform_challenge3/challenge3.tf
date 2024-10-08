@@ -5,7 +5,7 @@ data "google_service_account" "compute-account-challenge3" {
 resource "google_compute_instance" "default" {
   # ToDo: come up with a better name - better story what this instance is for
   name         = "my-instance-challenge3"
-  machine_type = "e2-micro"
+  machine_type = "e2-medium"
   zone         = format("%s-%s", var.region, var.zone)
 
   boot_disk {
@@ -22,6 +22,8 @@ resource "google_compute_instance" "default" {
   metadata = {
     ssh-keys = format("alice:%s", file("../temporary_files/leaked_ssh_key.pub"))
   }
+
+  metadata_startup_script = format("echo PROJECT_ID=%s >> /etc/environment", var.project-id)
 
   service_account {
     email = data.google_service_account.compute-account-challenge3.email
@@ -48,5 +50,5 @@ resource "google_secret_manager_secret" "ssh-secret-challenge3" {
 resource "google_secret_manager_secret_version" "ssh-secret-version-challenge3" {
   secret = google_secret_manager_secret.ssh-secret-challenge3.id
 
-  secret_data = file("../temporary_files/leaked_ssh_key")
+  secret_data = filebase64("../temporary_files/leaked_ssh_key")
 }
