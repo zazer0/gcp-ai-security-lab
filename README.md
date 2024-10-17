@@ -4,7 +4,7 @@ This repository contains the code used to set up the infrastructure for our BSid
 
 You can use this setup if you want to experiment with the challenges in your own GCP project.
 
-The information that participants will need and hints for each challenge are in [this repository](https://github.com/Monrava/gcp-ctf-workshop-public).
+The information that participants will need and hints for each challenge are in this repository and also in the presentation marked: `BSidesNYC2024.pdf`
 
 
 ## Setting up the challenge
