@@ -151,6 +151,10 @@ list storage buckets from VM
   #####
     curl -s -X POST https://$LOCATION-$PROJECT_ID.cloudfunctions.net/monitoring-function -H "Authorization: bearer $(gcloud auth print-identity-token)" -H "Content-Type: application/json" -d '{"metadata": "token"}'
 
+  save the new token in env var and check access scopes
+  #####
+    curl -i https://www.googleapis.com/oauth2/v3/tokeninfo\?access_token=$TOKEN
+    
   </details>
 
 </details>
