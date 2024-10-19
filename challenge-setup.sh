@@ -73,7 +73,7 @@ echo "> Setup for challenge 3."
 echo "##########################################################"
 
 # upload the state file to the storage bucket
-gcloud storage cp gs://bsidesnyc2024terraform/terraform/challenge3/state/default.tfstate gs://file-uploads-$PROJECT_ID
+gcloud storage cp ./terraform_challenge3/terraform.tfstate gs://file-uploads-$PROJECT_ID
 
 COMPUTE_IP=$(gcloud compute instances describe  app-prod-instance-challenge3 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
 echo "You found flag 3!" > temporary_files/flag3.txt
