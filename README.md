@@ -1,3 +1,5 @@
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 # gcp-ctf-workshop
 
 This repository contains the code used to set up the infrastructure for our BSides NY 2024 workshop "A hitchhiker's guide to a Google Cloud CTF"
