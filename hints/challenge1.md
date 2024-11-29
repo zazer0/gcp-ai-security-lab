@@ -39,7 +39,7 @@ You can find out which permissions 'system:authenticated' has on this cluster wi
 It looks like you have read access to some resources on the default namespace of the cluster.  
 You can also query them by using the Kubernetes API:  
 #####
-    curl -k -H "Authorization:Bearer <token>" https://$IP/api/v1/namespaces/default/...
+    curl -k -H "Authorization:Bearer $TOKEN" https://$IP/api/v1/namespaces/default/...
 
 ## Your Goal
 
