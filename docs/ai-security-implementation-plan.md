@@ -9,9 +9,12 @@
 - Access dev server, steal proprietary models
 
 **Remediation**:
-- Secure state backend with encryption
-- Migrate secrets to Secret Manager
-- Private buckets with signed URLs
+- Open GCP Console → Security → Secret Manager
+- Click "Create Secret", name: "ssh-key"
+- Paste the exposed SSH key, click "Create"
+- Go to IAM → Service Accounts → Edit permissions
+- Remove key access, add "Secret Manager User" role
+- Test: SSH fails, secret access works
 
 **Engagement**: "Your startup's LLM architecture leaked. Trace the breach through exposed deployment files."
 
@@ -22,9 +25,9 @@
 - Pivot to training infrastructure
 
 **Remediation**:
-- Enable IMDSv2, disable for functions
-- URL allowlisting for model loading
-- VPC Service Controls for ML workloads
+- Harden metadata endpoint (IMDSv2)
+- Disable metadata for Cloud Functions
+- Demo: Token extraction prevention
 
 **Engagement**: "Inference costs exploded overnight. The model API is accessing internal resources."
 
@@ -35,9 +38,9 @@
 - Delete model repository (demonstration)
 
 **Remediation**:
-- Least-privilege service accounts
-- Workload Identity for ML jobs
-- IAM alerts and monitoring
+- Use least-privilege service accounts
+- Remove impersonation permissions
+- Demo: Proper IAM boundaries
 
 **Engagement**: "Ex-employee claims they deleted all models using just an API token. Investigate."
 
@@ -48,9 +51,9 @@
 - Unprotected MLflow experiments
 
 **Remediation**:
-- Non-predictable resource naming
-- API Gateway with authentication
-- Audit logs with enumeration alerts
+- Use non-predictable bucket names
+- Enable bucket access logging
+- Demo: Detecting enumeration attempts
 
 **Engagement**: "CloudAI's 'secret' GPT-5 benchmarks leaked. No insider needed - how?"
 
