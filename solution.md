@@ -1,16 +1,16 @@
 # Commands
 
 <details>
-  <summary>***** Challenge 1 *****</summary>
+  <summary>***** Challenge 3 *****</summary>
 
-## Challenge 1
+## Challenge 3
 
 read state file
 #####
     gsutil cat gs://file-uploads-$PROJECT_ID/default.tfstate
 
   <details>
-    <summary>Walkthrough Challenge 1</summary>
+    <summary>Walkthrough Challenge 3</summary>
     
   ssh into vm
   #####
@@ -23,9 +23,9 @@ read state file
 #
 
 <details>
-  <summary>***** Challenge 2 *****</summary>
+  <summary>***** Challenge 4 *****</summary>
 
-## Challenge 2
+## Challenge 4
 
 show VM service account
 #####
@@ -48,7 +48,7 @@ list storage buckets from VM
     gsutil ls
 
   <details>
-    <summary>Walkthrough Challenge 2</summary>
+    <summary>Walkthrough Challenge 4</summary>
 
   list function source code bucket
   #####
@@ -77,9 +77,9 @@ list storage buckets from VM
 #
 
 <details>
-  <summary>***** Challenge 3 *****</summary>
+  <summary>***** Challenge 5 *****</summary>
 
-## Challenge 3
+## Challenge 5
 
 set token as env var
 #####
@@ -102,7 +102,7 @@ Describe bindings on SA
     gcloud iam service-accounts get-iam-policy <terraform service account>
 
   <details>
-    <summary>Walkthrough Challenge 3</summary>
+    <summary>Walkthrough Challenge 5</summary>
   
   impersonate and set binding
   #####

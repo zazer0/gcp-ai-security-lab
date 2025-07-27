@@ -16,7 +16,7 @@ ssh-keygen -t ed25519 -C "alice" -f temporary_files/leaked_ssh_key -N ''
 fi
 
 echo "##########################################################"
-echo "> Beginning terraform setup for - challenge 1 (former challenge 3)."
+echo "> Beginning terraform setup for - challenge 3."
 echo "##########################################################"
 cd terraform_challenge3
 terraform init -input=false
@@ -26,7 +26,7 @@ cd ../
 
 # set up resources with terraform
 echo "##########################################################"
-echo "> Beginning terraform setup for - challenges 2 and 3."
+echo "> Beginning terraform setup for - challenges 4 and 5."
 echo "##########################################################"
 
 cd terraform
@@ -36,7 +36,7 @@ terraform apply -input=false "tf.out"
 cd ../
 
 echo "##########################################################"
-echo "> Setup for challenge 1 (former challenge 3)."
+echo "> Setup for challenge 3."
 echo "##########################################################"
 
 ZONE=$(gcloud compute instances list  --project $PROJECT_ID | grep challenge3 | awk '{print$2}')
@@ -49,7 +49,7 @@ echo "You found flag 1!" > temporary_files/flag1.txt
 scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no temporary_files/flag1.txt alice@$COMPUTE_IP:/home/alice/
 
 echo "##########################################################"
-echo "> Setup for challenge 2 (former challenge 4)."
+echo "> Setup for challenge 4."
 echo "##########################################################"
 #
 # copy function invocation script on compute engine
