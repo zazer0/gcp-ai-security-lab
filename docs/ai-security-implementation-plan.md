@@ -62,8 +62,8 @@ Prevent decodable SSH Key
 - Check current service account: `gcloud auth list`
   - Notice default compute service account with full project access
 - Discover cloud function bucket: `gsutil ls`
-  - Find 'cloud-function-bucket-challenge4' in output
-- Read function source: `gsutil cat gs://cloud-function-bucket-challenge4/main.py`
+  - Find 'cloud-function-bucket-module3' in output
+- Read function source: `gsutil cat gs://cloud-function-bucket-module3/main.py`
   - Notice SSRF vulnerability in monitoring endpoint
 - Run pre-installed script: `./invoke_monitoring_function.sh`
   - Script shows function URL format

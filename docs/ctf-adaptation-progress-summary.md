@@ -66,7 +66,7 @@
 - **Retained Components**:
   - terraform/ directory (minus challenge1.tf, challenge2.tf)
   - terraform_module2/ for compute instances
-  - Cloud function in challenge4.tf
+  - Cloud function in module3.tf
   - IAM configurations in challenge5.tf
 
 - **Components to Remove**:

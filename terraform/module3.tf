@@ -7,12 +7,12 @@ data "archive_file" "main" {
   output_path = "${path.module}/files/main.zip"
 }
 
-data "google_service_account" "compute-account-challenge4" {
+data "google_service_account" "compute-account-module3" {
   account_id = format("%s-compute@developer.gserviceaccount.com", var.project_number)
 }
 
 resource "google_storage_bucket" "cloud-function-bucket" {
-  name          = format("cloud-function-bucket-challenge4-%s", var.project_id)
+  name          = format("cloud-function-bucket-module3-%s", var.project_id)
   location      = var.region
   force_destroy = true
 }
@@ -40,7 +40,7 @@ resource "google_cloudfunctions2_function" "function" {
   }
   service_config {
     max_instance_count    = 200
-    service_account_email = data.google_service_account.compute-account-challenge4.email
+    service_account_email = data.google_service_account.compute-account-module3.email
   }
 }
 
@@ -51,5 +51,5 @@ resource "google_cloud_run_service_iam_member" "invoker" {
   location = google_cloudfunctions2_function.function.location
   service  = google_cloudfunctions2_function.function.name
   role     = "roles/run.invoker"
-  member   = format("serviceAccount:%s", data.google_service_account.compute-account-challenge4.email)
+  member   = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
 }

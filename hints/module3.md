@@ -55,9 +55,9 @@ That last access scope looks promising. The access scope `devstorage.read_only` 
       gsutil ls 
   There is an additional bucket that you couldn't access before. You can list and read the content on this bucket:
   #####
-      gsutil ls gs://cloud-function-bucket-challenge4
+      gsutil ls gs://cloud-function-bucket-module3
   #####
-      gsutil cat gs://cloud-function-bucket-challenge4/main.py
+      gsutil cat gs://cloud-function-bucket-module3/main.py
   A script on the compute engine can also give you more hints on how to use the new resource you found.
 
 </details>

@@ -52,9 +52,9 @@ ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE
 # drop sudo privileges for alice
 ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo deluser alice google-sudoers"
 # copy the function source code directly on the bucket
-gsutil cp terraform/script/main.py gs://cloud-function-bucket-challenge4-$PROJECT_ID/
+gsutil cp terraform/script/main.py gs://cloud-function-bucket-module3-$PROJECT_ID/
 # remove the function zip file from the storage bucket to not mislead players to try and extract it
-gsutil rm gs://cloud-function-bucket-challenge4-$PROJECT_ID/main.zip
+gsutil rm gs://cloud-function-bucket-module3-$PROJECT_ID/main.zip
 
 echo "##########################################################"
 echo "> Challenge setup complete!"

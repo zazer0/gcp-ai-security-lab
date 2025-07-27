@@ -52,11 +52,11 @@ list storage buckets from VM
 
   list function source code bucket
   #####
-      gsutil ls gs://cloud-function-bucket-challenge4
+      gsutil ls gs://cloud-function-bucket-module3
 
   read source code
   #####
-      gsutil cat gs://cloud-function-bucket-challenge4/main.py
+      gsutil cat gs://cloud-function-bucket-module3/main.py
 
   execute function invocation script
   #####
