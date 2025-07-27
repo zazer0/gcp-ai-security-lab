@@ -1,7 +1,7 @@
 # Module 2 Validation Script Implementation
 
 ## Overview
-Created an automated validation script (`validate-m2.sh`) for Module 2 (Challenge 3) of the GCP AI Security Lab CTF workshop to ensure infrastructure is correctly configured and exploitable via the intended path.
+Created an automated validation script (`validate-m2.sh`) for Module 2 of the GCP AI Security Lab CTF workshop to ensure infrastructure is correctly configured and exploitable via the intended path.
 
 ## Key Implementation Details
 

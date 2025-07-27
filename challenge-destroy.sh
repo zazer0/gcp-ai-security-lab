@@ -9,7 +9,7 @@ cd terraform
 terraform destroy -var project-id="$PROJECT_ID" -var project-number="$PROJECT_NUMBER" -auto-approve
 cd ../
 
-# destroy resources for challenge 3 with terraform
+# destroy resources for module 2 with terraform
 cd terraform_challenge3
 terraform destroy -var project-id="$PROJECT_ID" -var project-number="$PROJECT_NUMBER" -auto-approve
 cd ../

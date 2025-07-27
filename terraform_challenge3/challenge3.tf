@@ -1,9 +1,9 @@
-data "google_service_account" "compute-account-challenge3" {
+data "google_service_account" "compute-account-module2" {
   account_id = format("%s-compute@developer.gserviceaccount.com", var.project_number)
 }
 
-resource "google_compute_instance" "compute-instance-challenge3" {
-  name         = "app-prod-instance-challenge3"
+resource "google_compute_instance" "compute-instance-module2" {
+  name         = "app-prod-instance-module2"
   machine_type = "e2-medium"
   zone         = format("%s-%s", var.region, var.zone)
 
@@ -25,7 +25,7 @@ resource "google_compute_instance" "compute-instance-challenge3" {
   metadata_startup_script = format("echo PROJECT_ID=%s >> /etc/environment; echo LOCATION=%s >> /etc/environment; echo unset HISTFILE >>/home/alice/.bashrc", var.project_id, var.region)
 
   service_account {
-    email = data.google_service_account.compute-account-challenge3.email
+    email = data.google_service_account.compute-account-module2.email
     # these are the default scopes when creating a compute engine with the compute service account from the cloud console.
     scopes = [
       "https://www.googleapis.com/auth/trace.append",
@@ -38,7 +38,7 @@ resource "google_compute_instance" "compute-instance-challenge3" {
   }
 }
 
-resource "google_secret_manager_secret" "ssh-secret-challenge3" {
+resource "google_secret_manager_secret" "ssh-secret-module2" {
   secret_id = "ssh-key"
 
   replication {
@@ -46,13 +46,13 @@ resource "google_secret_manager_secret" "ssh-secret-challenge3" {
   }
 }
 
-resource "google_secret_manager_secret_version" "ssh-secret-version-challenge3" {
-  secret = google_secret_manager_secret.ssh-secret-challenge3.id
+resource "google_secret_manager_secret_version" "ssh-secret-version-module2" {
+  secret = google_secret_manager_secret.ssh-secret-module2.id
 
   secret_data = filebase64("../temporary_files/leaked_ssh_key")
 }
 
-resource "google_storage_bucket" "bucket-challenge3" {
+resource "google_storage_bucket" "bucket-module2" {
   name          = format("file-uploads-%s", var.project_id)
   location      = var.region
   force_destroy = true

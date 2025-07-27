@@ -12,7 +12,7 @@ This is a GCP CTF (Capture The Flag) workshop that creates intentionally vulnera
 - **Destroy infrastructure**: `./challenge-destroy.sh` - Cleans up all resources and credentials
 
 ### Working with Terraform
-- **Initialize**: `cd terraform && terraform init` (or `cd terraform_challenge3` for challenge 3)
+- **Initialize**: `cd terraform && terraform init` (or `cd terraform_challenge3` for module 2)
 - **Plan changes**: `terraform plan`
 - **Apply changes**: `terraform apply`
 - **Destroy resources**: `terraform destroy`

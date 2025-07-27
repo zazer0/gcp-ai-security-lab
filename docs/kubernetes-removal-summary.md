@@ -24,7 +24,7 @@ Remove all Kubernetes/GKE content from the GCP CTF workshop repository while pre
 ### Infrastructure Modifications
 - **terraform_challenge3/challenge3.tf**
   - Added `google_storage_bucket` resource "bucket-challenge3" to replace the deleted bucket from challenge2.tf
-  - Ensures state file upload location exists for challenge 1 (former challenge 3)
+  - Ensures state file upload location exists for challenge 1 (former module 2)
 
 ### Script Updates
 - **challenge-setup.sh**
