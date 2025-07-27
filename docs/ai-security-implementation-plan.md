@@ -1,21 +1,19 @@
 # AI Security Bootcamp Implementation Plan
 
-> Context: "CloudAI Labs" - A model hosting platform (like Hugging Face) with security flaws
+Context: "CloudAI Labs" - A model hosting platform (like Hugging Face) with security flaws
 
 ## Implementation Details
 
 ### Code Structure
-- Reuse existing terraform files
+- Use terraform files for deployment
 - Add simple Flask ML API
-- Pre-deploy vulnerable notebooks
 
-### Student Experience  
+### Student Experience
 - ~30 minutes per module
 - Story → Attack → Fix
 - Visual diagrams provided
 
 ### Simplifications
-- No Kubernetes
 - Pre-configured gcloud
 - Focus: Storage, Functions, IAM
 
