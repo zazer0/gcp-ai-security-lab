@@ -19,7 +19,7 @@ echo "##########################################################"
 ZONE=$(gcloud compute instances list --project $PROJECT_ID | grep module2 | awk '{print$2}')
 
 # upload the state file to the storage bucket
-gcloud storage cp ./terraform_module2/terraform.tfstate gs://file-uploads-$PROJECT_ID
+gcloud storage cp ./terraform_module2/terraform.tfstate gs://file-uploads-$PROJECT_ID/default.tfstate
 
 COMPUTE_IP=$(gcloud compute instances describe app-prod-instance-module2 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
 echo "You found flag 1!" > temporary_files/flag1.txt
