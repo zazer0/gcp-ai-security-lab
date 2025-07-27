@@ -25,12 +25,12 @@
 - Pivot to training infrastructure
 
 **Remediation**:
-- Go to Compute Engine → VM instances
-- Click instance name → Edit
-- Scroll to "Metadata" section
-- Toggle OFF "Enable the Compute Engine metadata server"
-- Click "Save" at bottom
-- Test: SSRF to 169.254.169.254 now fails
+- Go to IAM & Admin → Service Accounts → Create
+- Name: "model-api-vm", description: "Minimal VM account"
+- Skip permissions for now → Create
+- Compute Engine → VM instances → Click instance
+- Edit → Service account → Select "model-api-vm"
+- Save → Test: SSRF gets limited token
 
 **Engagement**: "Inference costs exploded overnight. The model API is accessing internal resources."
 
