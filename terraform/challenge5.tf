@@ -1,5 +1,5 @@
 data "google_service_account" "compute-account-challenge5" {
-  account_id = format("%s-compute@developer.gserviceaccount.com", var.project-number)
+  account_id = format("%s-compute@developer.gserviceaccount.com", var.project_number)
 }
 
 resource "google_service_account" "impersonation-challenge-5" {
@@ -15,7 +15,7 @@ resource "google_project_iam_custom_role" "project-iam-setter-role-challenge5" {
 }
 
 resource "google_project_iam_member" "project-iam-setter-member-challenge5" {
-  project = var.project-id
+  project = var.project_id
   role    = google_project_iam_custom_role.project-iam-setter-role-challenge5.id
   member  = format("serviceAccount:%s", google_service_account.impersonation-challenge-5.email)
 

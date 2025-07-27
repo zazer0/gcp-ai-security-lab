@@ -8,11 +8,11 @@ data "archive_file" "main" {
 }
 
 data "google_service_account" "compute-account-challenge4" {
-  account_id = format("%s-compute@developer.gserviceaccount.com", var.project-number)
+  account_id = format("%s-compute@developer.gserviceaccount.com", var.project_number)
 }
 
 resource "google_storage_bucket" "cloud-function-bucket" {
-  name          = format("cloud-function-bucket-challenge4-%s", var.project-id)
+  name          = format("cloud-function-bucket-challenge4-%s", var.project_id)
   location      = var.region
   force_destroy = true
 }

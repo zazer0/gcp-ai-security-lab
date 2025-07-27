@@ -1,5 +1,5 @@
 data "google_service_account" "compute-account-challenge3" {
-  account_id = format("%s-compute@developer.gserviceaccount.com", var.project-number)
+  account_id = format("%s-compute@developer.gserviceaccount.com", var.project_number)
 }
 
 resource "google_compute_instance" "compute-instance-challenge3" {
@@ -22,7 +22,7 @@ resource "google_compute_instance" "compute-instance-challenge3" {
     ssh-keys = format("alice:%s", file("../temporary_files/leaked_ssh_key.pub"))
   }
 
-  metadata_startup_script = format("echo PROJECT_ID=%s >> /etc/environment; echo LOCATION=%s >> /etc/environment; echo unset HISTFILE >>/home/alice/.bashrc", var.project-id, var.region)
+  metadata_startup_script = format("echo PROJECT_ID=%s >> /etc/environment; echo LOCATION=%s >> /etc/environment; echo unset HISTFILE >>/home/alice/.bashrc", var.project_id, var.region)
 
   service_account {
     email = data.google_service_account.compute-account-challenge3.email
@@ -53,7 +53,7 @@ resource "google_secret_manager_secret_version" "ssh-secret-version-challenge3" 
 }
 
 resource "google_storage_bucket" "bucket-challenge3" {
-  name          = format("file-uploads-%s", var.project-id)
+  name          = format("file-uploads-%s", var.project_id)
   location      = var.region
   force_destroy = true
 

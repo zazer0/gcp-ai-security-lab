@@ -6,6 +6,6 @@ variable "zone" {
   default = "b"
 }
 
-variable "project-id" {}
+variable "project_id" {}
 
-variable "project-number" {}
+variable "project_number" {}
