@@ -20,7 +20,7 @@ echo "> Beginning terraform setup for - Module 2."
 echo "##########################################################"
 cd terraform_module2
 terraform init -input=false
-terraform plan -out tf.out -var project-id="$PROJECT_ID" -var project-number="$PROJECT_NUMBER" -input=false
+terraform plan -out tf.out -var project_id="$PROJECT_ID" -var project_number="$PROJECT_NUMBER" -input=false
 terraform apply -input=false "tf.out"
 cd ../
 
@@ -31,7 +31,7 @@ echo "##########################################################"
 
 cd terraform
 terraform init -input=false
-terraform plan -out tf.out -var project-id="$PROJECT_ID" -var project-number="$PROJECT_NUMBER" -input=false
+terraform plan -out tf.out -var project_id="$PROJECT_ID" -var project_number="$PROJECT_NUMBER" -input=false
 terraform apply -input=false "tf.out"
 cd ../
 
