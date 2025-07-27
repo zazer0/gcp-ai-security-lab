@@ -1,73 +1,48 @@
-# Challenge 1: Confidential Cluster
+# Challenge 3: Computing power
 
 ## Introduction
 
-You received just an IP address as your very first entrypoint into the GCP project.  
-The IP belongs to a Google Kubernetes Cluster (GKE) - how can you access the Kubernetes API to learn more about the cluster?
+The file on the storage bucket is pretty useful for you as attacker.  
+That seems to be the leftovers of a terraform pipeline that someone set up for this GCP project.  
+They deployed parts of the infrastructure with terraform and the terraform state file tells you how that infrastructure is configured.  
 
-
-To simplify your next commands, set the IP address as an environment variable:  
-#####
-    export IP=<IP>
-
-You can access the API of the cluster at this endpoint:  
-#####
-    curl -k https://$IP/api
-
-As you are not authenticated, you are part of the group `system:anonymous` and you can't access much.  
-Most endpoints will respond with 403 permission denied.  
-
-But what if you were in `system:authenticated`? 
-Try to get a token for your own Google account using the [OAuth playground](https://developers.google.com/oauthplayground/) (select scope "Kubernetes Engine API v1").  
-
-Set your token as environment variable to make the next commands easier to use.  
-#####
-    export TOKEN=<token>
-
-Send a request with your token to the Kubernetes API:  
-#####
-    curl -k -H "Authorization:Bearer $TOKEN" https://$IP/api/
-
-Just by supplying any Google access token you will be able to access the endpoint!  
-
-Once you have gained access and can read from the Kubernetes API - which API resources can you query?
-
-You can find out which permissions 'system:authenticated' has on this cluster with a request to this endpoint:  
-#####
-    curl -k -X POST -H "Content-Type: application/json" -d '{"apiVersion":"authorization.k8s.io/v1", "kind":"SelfSubjectRulesReview", "spec":{"namespace":"default"}}' -H "Authorization:Bearer $TOKEN" https://$IP/apis/authorization.k8s.io/v1/selfsubjectrulesreviews
-
-It looks like you have read access to some resources on the default namespace of the cluster.  
-You can also query them by using the Kubernetes API:  
-#####
-    curl -k -H "Authorization:Bearer $TOKEN" https://$IP/api/v1/namespaces/default/...
+Would that help you to move on into other infrastructure deployed here?
 
 ## Your Goal
 
-**Discover the secrets that this cluster has in store for you.**
+**Gain control over the infrastructure deployed via terraform**
 
 ## Useful commands and tools:
 
-- `curl -k https://$IP`
-- `curl -k -H "Authorization:Bearer <token>" https://$IP/api/v1/namespaces/default/...`
-- [Google OAuth Playground](https://developers.google.com/oauthplayground/)
-- Learn more about this misconfiguration [here](https://orca.security/resources/blog/sys-all-google-kubernetes-engine-risk)
+- `base64 -d`
 
 ## Hints
-
 <details>
   <summary>Hint 1</summary>
 
-  You can read Kubernetes secrets in the default namespace on the cluster. Which secrets might it hold?  
-  #####
-      curl -k -H "Authorization:Bearer $TOKEN" https://$IP/api/v1/namespaces/default/secrets
+  The state file contains the parameters that were used to set up a Google Compute Engine VM.  
+  But additionally, it contains a secret ...  
+  Can you combine this information to access the VM?
 
 </details>
 
 <details>
   <summary>Hint 2</summary>
 
-  The secret values are base64 encoded. Decode them to read the value:  
+  The state file conveniently contains the external IP address of a compute engine that was deployed with terraform. 
+  It also reveals the name of a user who has ssh access to the VM.   
+  But someone also created a Google Secret Manager secret with terraform and specified the secret value as well.  
+  If you do that, your terraform state file will contain the secret value in plain text.  
+  Use the SSH key you find in the secret to SSH into the VM.  
+
+</details>
+
+<details>
+  <summary>Hint 3</summary>
+
+  Save the SSH private key that you find in the terraform state in a file.  
+  You'll also find the IP address of the compute instance in the parameter "nat_ip". The "metadata" parameter tells you that a user named "alice" has SSH access to this instance.  
   #####
-      echo -n <secret-value> | base64 -d  
+      ssh -i <private key file> alice@<compute instance IP> 
 
 </details>

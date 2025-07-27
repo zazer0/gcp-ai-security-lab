@@ -16,7 +16,7 @@ ssh-keygen -t ed25519 -C "alice" -f temporary_files/leaked_ssh_key -N ''
 fi
 
 echo "##########################################################"
-echo "> Beginning terraform setup for - challenge 3."
+echo "> Beginning terraform setup for - challenge 1 (former challenge 3)."
 echo "##########################################################"
 cd terraform_challenge3
 terraform init -input=false
@@ -26,7 +26,7 @@ cd ../
 
 # set up resources with terraform
 echo "##########################################################"
-echo "> Beginning terraform setup for - challenges 1, 2, 4 and 5."
+echo "> Beginning terraform setup for - challenges 2 and 3."
 echo "##########################################################"
 
 cd terraform
@@ -36,51 +36,20 @@ terraform apply -input=false "tf.out"
 cd ../
 
 echo "##########################################################"
-echo "> Setup for challenge 1."
+echo "> Setup for challenge 1 (former challenge 3)."
 echo "##########################################################"
 
 ZONE=$(gcloud compute instances list  --project $PROJECT_ID | grep challenge3 | awk '{print$2}')
-
-# create a service account key for the account we will leak in challenge 1
-gcloud iam service-accounts keys create temporary_files/challenge1-creds.json --iam-account=gkeapp-file-uploader@$PROJECT_ID.iam.gserviceaccount.com
-
-# set up connection to the gke cluster created in challenge 1
-gcloud container clusters get-credentials gke-cluster-challenge-1 --zone $ZONE --project $PROJECT_ID
-
-# create a kubernetes secret containing the service account key
-kubectl create secret generic gkeapp-file-uploader-account --from-file=temporary_files/challenge1-creds.json
-# leave a hint in form of a label which bucket this service account can access
-kubectl label secret gkeapp-file-uploader-account "bucket=file-uploads-$PROJECT_ID"
-
-# flag 1
-kubectl create secret generic flag1 --type=string --from-literal=flag1="You found flag 1!"
-
-# Configure cluster role bindings
-kubectl apply -f manifests/roles.yaml 
-kubectl apply -f manifests/bindings.yaml
-
-echo "##########################################################"
-echo "> Setup for challenge 2."
-echo "##########################################################"
-
-
-# flag 2
-echo "You found flag 2!" > temporary_files/flag2.txt
-gsutil cp temporary_files/flag2.txt gs://file-uploads-$PROJECT_ID
-
-echo "##########################################################"
-echo "> Setup for challenge 3."
-echo "##########################################################"
 
 # upload the state file to the storage bucket
 gcloud storage cp ./terraform_challenge3/terraform.tfstate gs://file-uploads-$PROJECT_ID
 
 COMPUTE_IP=$(gcloud compute instances describe  app-prod-instance-challenge3 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
-echo "You found flag 3!" > temporary_files/flag3.txt
-scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no temporary_files/flag3.txt alice@$COMPUTE_IP:/home/alice/
+echo "You found flag 1!" > temporary_files/flag1.txt
+scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no temporary_files/flag1.txt alice@$COMPUTE_IP:/home/alice/
 
 echo "##########################################################"
-echo "> Setup for challenge 4."
+echo "> Setup for challenge 2 (former challenge 4)."
 echo "##########################################################"
 #
 # copy function invocation script on compute engine
@@ -90,9 +59,9 @@ ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE
 # drop sudo privileges for alice
 ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo deluser alice google-sudoers"
 # copy the function source code directly on the bucket
-gsutil cp terraform/script/main.py gs://cloud-function-bucket-challenge4/
+gsutil cp terraform/script/main.py gs://cloud-function-bucket-challenge4-$PROJECT_ID/
 # remove the function zip file from the storage bucket to not mislead players to try and extract it
-gsutil rm gs://cloud-function-bucket-challenge4/main.zip
+gsutil rm gs://cloud-function-bucket-challenge4-$PROJECT_ID/main.zip
 
 
 

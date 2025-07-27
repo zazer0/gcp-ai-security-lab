@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-This is a GCP CTF (Capture The Flag) workshop that creates intentionally vulnerable Google Cloud Platform infrastructure for security education. It includes 5 progressive security challenges teaching cloud exploitation techniques.
+This is a GCP CTF (Capture The Flag) workshop that creates intentionally vulnerable Google Cloud Platform infrastructure for security education. It includes 3 progressive security challenges teaching cloud exploitation techniques.
 
 ## Essential Commands
 
@@ -17,30 +17,24 @@ This is a GCP CTF (Capture The Flag) workshop that creates intentionally vulnera
 - **Apply changes**: `terraform apply`
 - **Destroy resources**: `terraform destroy`
 
-### Kubernetes Operations
-- **Get cluster credentials**: `gcloud container clusters get-credentials ctf-cluster --zone=us-central1-a`
-- **Apply manifests**: `kubectl apply -f manifests/`
-- **Check deployments**: `kubectl get deployments -n default`
 
 ## Architecture Overview
 
 ### Infrastructure Layout
-- **terraform/**: Main infrastructure for challenges 1, 2, 4, and 5
-  - Creates GKE cluster, storage buckets, cloud functions, service accounts
-- **terraform_challenge3/**: Separate infrastructure for challenge 3
-  - Creates compute instances with specific SSH configurations
-- **manifests/**: Kubernetes configurations for vulnerable deployments
+- **terraform/**: Main infrastructure for challenges 2 and 3
+  - Creates storage buckets, cloud functions, service accounts
+- **terraform_challenge3/**: Separate infrastructure for challenge 1
+  - Creates compute instances with specific SSH configurations and storage bucket
 - **temporary_files/**: Generated credentials (gitignored, created during setup)
 
 ### Key GCP Resources Created
-1. **GKE Cluster**: Named "ctf-cluster" in us-central1-a
-2. **Storage Buckets**: Multiple buckets with varying access controls
-3. **Compute Instances**: VMs with specific metadata/SSH configurations
-4. **Cloud Functions**: Python functions with metadata endpoint vulnerabilities
-5. **Service Accounts**: Various accounts with different permission levels
+1. **Storage Buckets**: Multiple buckets with varying access controls
+2. **Compute Instances**: VMs with specific metadata/SSH configurations
+3. **Cloud Functions**: Python functions with metadata endpoint vulnerabilities
+4. **Service Accounts**: Various accounts with different permission levels
 
 ### Security Challenges Structure
-Each challenge (1-5) involves:
+Each challenge (1-3) involves:
 - Specific misconfiguration or vulnerability
 - Flag hidden in GCP resources
 - Progressive difficulty

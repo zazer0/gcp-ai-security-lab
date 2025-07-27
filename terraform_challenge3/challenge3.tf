@@ -51,3 +51,11 @@ resource "google_secret_manager_secret_version" "ssh-secret-version-challenge3" 
 
   secret_data = filebase64("../temporary_files/leaked_ssh_key")
 }
+
+resource "google_storage_bucket" "bucket-challenge3" {
+  name          = format("file-uploads-%s", var.project-id)
+  location      = var.region
+  force_destroy = true
+
+  public_access_prevention = "enforced"
+}

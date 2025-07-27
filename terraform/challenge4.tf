@@ -12,7 +12,7 @@ data "google_service_account" "compute-account-challenge4" {
 }
 
 resource "google_storage_bucket" "cloud-function-bucket" {
-  name          = "cloud-function-bucket-challenge4"
+  name          = format("cloud-function-bucket-challenge4-%s", var.project-id)
   location      = var.region
   force_destroy = true
 }
