@@ -25,9 +25,12 @@
 - Pivot to training infrastructure
 
 **Remediation**:
-- Harden metadata endpoint (IMDSv2)
-- Disable metadata for Cloud Functions
-- Demo: Token extraction prevention
+- Go to Compute Engine → VM instances
+- Click instance name → Edit
+- Scroll to "Metadata" section
+- Toggle OFF "Enable the Compute Engine metadata server"
+- Click "Save" at bottom
+- Test: SSRF to 169.254.169.254 now fails
 
 **Engagement**: "Inference costs exploded overnight. The model API is accessing internal resources."
 
@@ -38,9 +41,12 @@
 - Delete model repository (demonstration)
 
 **Remediation**:
-- Use least-privilege service accounts
-- Remove impersonation permissions
-- Demo: Proper IAM boundaries
+- Navigate to IAM & Admin → Service Accounts
+- Find "inference-api@" account → View permissions
+- Click pencil icon next to "Service Account Token Creator"
+- Select "Remove" → Confirm removal
+- Create new role: "Model Inference Only" with minimal perms
+- Test: Impersonation chain now broken
 
 **Engagement**: "Ex-employee claims they deleted all models using just an API token. Investigate."
 
@@ -51,9 +57,12 @@
 - Unprotected MLflow experiments
 
 **Remediation**:
-- Use non-predictable bucket names
-- Enable bucket access logging
-- Demo: Detecting enumeration attempts
+- Go to Cloud Storage → Select "cloudai-dev" bucket
+- Click "Permissions" tab → Remove "allUsers"
+- Click "Configuration" → Edit bucket name
+- Rename to include random suffix: "cloudai-dev-7x9k2"
+- Enable "Access logs" → Select log bucket
+- Test: Old URLs return 404, logs show attempts
 
 **Engagement**: "CloudAI's 'secret' GPT-5 benchmarks leaked. No insider needed - how?"
 
