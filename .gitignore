@@ -54,3 +54,6 @@ leaked_ssh_key.pub
 
 # temporary files
 temporary_files/*
+
+# Claude worktree management
+.claude-wt/worktrees
