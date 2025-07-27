@@ -16,7 +16,7 @@ ssh-keygen -t ed25519 -C "alice" -f temporary_files/leaked_ssh_key -N ''
 fi
 
 echo "##########################################################"
-echo "> Beginning terraform setup for - module 2."
+echo "> Beginning terraform setup for - Module 2."
 echo "##########################################################"
 cd terraform_module2
 terraform init -input=false
@@ -35,23 +35,16 @@ terraform plan -out tf.out -var project-id="$PROJECT_ID" -var project-number="$P
 terraform apply -input=false "tf.out"
 cd ../
 
-echo "##########################################################"
-echo "> Setup for module 2."
-echo "##########################################################"
-
-ZONE=$(gcloud compute instances list  --project $PROJECT_ID | grep module2 | awk '{print$2}')
-
-# upload the state file to the storage bucket
-gcloud storage cp ./terraform_module2/terraform.tfstate gs://file-uploads-$PROJECT_ID
-
-COMPUTE_IP=$(gcloud compute instances describe  app-prod-instance-module2 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
-echo "You found flag 1!" > temporary_files/flag1.txt
-scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no temporary_files/flag1.txt alice@$COMPUTE_IP:/home/alice/
+# Call Module 2 specific setup script
+./mod2-setup.sh "$PROJECT_ID" "$PROJECT_NUMBER"
 
 echo "##########################################################"
 echo "> Setup for challenge 4."
 echo "##########################################################"
-#
+
+ZONE=$(gcloud compute instances list --project $PROJECT_ID | grep module2 | awk '{print$2}')
+COMPUTE_IP=$(gcloud compute instances describe app-prod-instance-module2 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
+
 # copy function invocation script on compute engine
 scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no ./invoke_monitoring_function.sh alice@$COMPUTE_IP:/tmp
 # make the script executable and not writeable and owned by root
@@ -62,9 +55,6 @@ ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE
 gsutil cp terraform/script/main.py gs://cloud-function-bucket-challenge4-$PROJECT_ID/
 # remove the function zip file from the storage bucket to not mislead players to try and extract it
 gsutil rm gs://cloud-function-bucket-challenge4-$PROJECT_ID/main.zip
-
-
-
 
 echo "##########################################################"
 echo "> Challenge setup complete!"
