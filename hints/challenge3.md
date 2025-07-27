@@ -1,48 +1,65 @@
-# Challenge 3: Computing power
+# Bonus Challenge 5: Admin Impersonation
 
 ## Introduction
 
-The file on the storage bucket is pretty useful for you as attacker.  
-That seems to be the leftovers of a terraform pipeline that someone set up for this GCP project.  
-They deployed parts of the infrastructure with terraform and the terraform state file tells you how that infrastructure is configured.  
+There is one last level of control you can achieve - gaining persistent access!  
+Wouldn't it be nice if you could add your own Google account to this project?  
+You can try to set an IAM binding on the project level. But while the compute account you compromised is powerful, it can't modify the IAM settings on the project.  
+But maybe another service account can?  
 
-Would that help you to move on into other infrastructure deployed here?
+> [!NOTE]
+> In this CTF challenge the only role you can grant your own Google account on the project level is "role/viewer".  
+
+You can tell gcloud to use your new powerful token by setting it as environment variable:  
+#####
+     export CLOUDSDK_AUTH_ACCESS_TOKEN=<function token>
+
+List the other service accounts on this project:
+#####
+    gcloud iam service-accounts list
+
+The `terraform-pipeline` account might be powerful. When you take a look again at the IAM bindings set on the project, this account has a role called `TerraformPipelineProjectAdmin`.  
+This looks like a custom role the developers created for their terraform pipeline.  
+Let's see what permissions it contains:  
+#####
+    gcloud iam roles describe TerraformPipelineProjectAdmin --project $PROJECT_ID
+This role allows setting new IAM bindings on the project!  
+You haven't compromised any resource that uses this service account, but luckily the compute service account that you control has the `serviceAccountTokenCreator` role on it:  
+#####
+    gcloud iam service-accounts get-iam-policy <terraform service account>
 
 ## Your Goal
 
-**Gain control over the infrastructure deployed via terraform**
+**Impersonate the `terraform-pipeline` service account and gain persistent access**
 
 ## Useful commands and tools:
-
-- `base64 -d`
+- list the IAM bindings on project level: `gcloud projects get-iam-policy $PROJECT_ID`
+- list service accounts: `gcloud iam service-accounts list` 
+- get IAM bindings showing who can control this service account: `gcloud iam service-accounts get-iam-policy <service account>`
+- the [ServiceAccountTokenCreator role](https://cloud.google.com/iam/docs/service-account-permissions#token-creator-role)
 
 ## Hints
+
 <details>
   <summary>Hint 1</summary>
 
-  The state file contains the parameters that were used to set up a Google Compute Engine VM.  
-  But additionally, it contains a secret ...  
-  Can you combine this information to access the VM?
+  The `serviceAccountTokenCreator` role, allowing service account impersonation!  
+  The compute service account can leverage the permissions of the terraform pipeline account by impersonating it.  
+  If you want to run gcloud commands while impersonating a service account, you can add the `--impersonate-service-account` flag to your gcloud command.
 
 </details>
 
 <details>
   <summary>Hint 2</summary>
 
-  The state file conveniently contains the external IP address of a compute engine that was deployed with terraform. 
-  It also reveals the name of a user who has ssh access to the VM.   
-  But someone also created a Google Secret Manager secret with terraform and specified the secret value as well.  
-  If you do that, your terraform state file will contain the secret value in plain text.  
-  Use the SSH key you find in the secret to SSH into the VM.  
-
-</details>
-
-<details>
-  <summary>Hint 3</summary>
-
-  Save the SSH private key that you find in the terraform state in a file.  
-  You'll also find the IP address of the compute instance in the parameter "nat_ip". The "metadata" parameter tells you that a user named "alice" has SSH access to this instance.  
+  Add your own Google Account to the GCP project by running:  
   #####
-      ssh -i <private key file> alice@<compute instance IP> 
+    gcloud projects add-iam-policy-binding $PROJECT_ID --member=user:<your Google account> --role=roles/viewer --impersonate-service-account <terraform pipeline account>
 
 </details>
+
+## GCP Project Takeover!
+
+When you complete the bonus challenge, you should be able to access this project in the [cloud console](https://console.cloud.google.com/) in your browser.  
+
+**You finished the challenge and pwnd the vulnerable Google Cloud Project!**
