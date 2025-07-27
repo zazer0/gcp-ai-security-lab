@@ -23,9 +23,9 @@ read state file
 #
 
 <details>
-  <summary>***** Challenge 4 *****</summary>
+  <summary>***** Module 3 *****</summary>
 
-## Challenge 4
+## Module 3
 
 show VM service account
 #####
@@ -48,7 +48,7 @@ list storage buckets from VM
     gsutil ls
 
   <details>
-    <summary>Walkthrough Challenge 4</summary>
+    <summary>Walkthrough Module 3</summary>
 
   list function source code bucket
   #####

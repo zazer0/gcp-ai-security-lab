@@ -57,7 +57,7 @@ Prevent decodable SSH Key
 **Engagement**: "Your startup's LLM architecture leaked. Trace the breach through exposed deployment files."
 
 ## Module 3: Instance Metadata Service Exploitation  
-**Attack** (Use Challenge 4):
+**Attack** (Use Module 3):
 - SSH into VM from Module 2: `ssh -i ~/.ssh/alice-key alice@<NAT-IP>`
 - Check current service account: `gcloud auth list`
   - Notice default compute service account with full project access

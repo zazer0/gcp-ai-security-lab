@@ -25,7 +25,7 @@ resource "google_storage_bucket_object" "gcs-function-file" {
 
 resource "google_cloudfunctions2_function" "function" {
   name        = "monitoring-function"
-  description = "This is a python function used for Challenge 4"
+  description = "This is a python function used for Module 3"
   location    = var.region
   build_config {
     runtime     = "python39"

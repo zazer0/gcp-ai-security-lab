@@ -39,7 +39,7 @@ cd ../
 ./mod2-setup.sh "$PROJECT_ID" "$PROJECT_NUMBER"
 
 echo "##########################################################"
-echo "> Setup for challenge 4."
+echo "> Setup for module 3."
 echo "##########################################################"
 
 ZONE=$(gcloud compute instances list --project $PROJECT_ID | grep module2 | awk '{print$2}')
