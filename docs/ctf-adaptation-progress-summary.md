@@ -65,7 +65,7 @@
 ## Infrastructure Requirements
 - **Retained Components**:
   - terraform/ directory (minus challenge1.tf, challenge2.tf)
-  - terraform_challenge3/ for compute instances
+  - terraform_module2/ for compute instances
   - Cloud function in challenge4.tf
   - IAM configurations in challenge5.tf
 

