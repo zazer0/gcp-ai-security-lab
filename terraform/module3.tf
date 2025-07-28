@@ -11,6 +11,18 @@ data "google_service_account" "compute-account-module3" {
   account_id = format("%s-compute@developer.gserviceaccount.com", var.project_number)
 }
 
+resource "google_service_account" "monitoring-function" {
+  account_id   = "monitoring-function"
+  display_name = "Monitoring Function Service Account"
+  description  = "Service account for the monitoring cloud function with elevated permissions"
+}
+
+resource "google_project_iam_member" "monitoring-function-editor" {
+  project = var.project_id
+  role    = "roles/editor"
+  member  = "serviceAccount:${google_service_account.monitoring-function.email}"
+}
+
 resource "google_storage_bucket" "cloud-function-bucket" {
   name          = format("cloud-function-bucket-module3-%s", var.project_id)
   location      = var.region
@@ -40,7 +52,7 @@ resource "google_cloudfunctions2_function" "function" {
   }
   service_config {
     max_instance_count    = 200
-    service_account_email = data.google_service_account.compute-account-module3.email
+    service_account_email = google_service_account.monitoring-function.email
   }
 }
 
@@ -52,4 +64,10 @@ resource "google_cloud_run_service_iam_member" "invoker" {
   service  = google_cloudfunctions2_function.function.name
   role     = "roles/run.invoker"
   member   = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
+}
+
+resource "google_project_iam_member" "compute-account-run-viewer" {
+  project = var.project_id
+  role    = "roles/run.viewer"
+  member  = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
 }

