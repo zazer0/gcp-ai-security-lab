@@ -40,7 +40,7 @@ Context: "CloudAI Labs" - A model hosting platform (like Hugging Face) with secu
 
 
 ## Module 2: Environment Secrets & State Exposure
-**Attack** (Adapt Challenge 3):
+**Attack** (Adapt Module 2):
 - `gsutil ls` newly discovered 'modeldata-prod' bucket
   - Discover + download Terraform Statefile
 - Examine file, notice 'alice' user, and 'nat' IP

@@ -1,4 +1,4 @@
-# Challenge 3: Computing power
+# Module 2: Computing power
 
 ## Introduction
 

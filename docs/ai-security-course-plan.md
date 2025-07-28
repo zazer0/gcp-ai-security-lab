@@ -2,14 +2,14 @@
 
 ### Key Modifications:
 - **Remove Challenge 1 & 2** (Kubernetes-dependent)
-- **Start with Challenge 3** as intro (terraform state exposure)
-- **Focus on Challenges 3, 4, 5** with simplified setup
+- **Start with Module 2** as intro (terraform state exposure)
+- **Focus on Modules 2, 3, 4** with simplified setup
 - **Add new simplified scenarios** for missing concepts
 
 ### Proposed 4-Module Structure:
 
 #### **Module 1: Environment Secrets & State Exposure**
-- **Attack Lab**: Modified Challenge 3
+- **Attack Lab**: Modified Module 2
   - Find exposed terraform state in public bucket
   - Extract SSH keys and infrastructure details
   - Simple webapp deployment instead of complex infra

@@ -22,9 +22,9 @@ Remove all Kubernetes/GKE content from the GCP CTF workshop repository while pre
   - `hints/challenge2.md` - K8s secrets extraction hints
 
 ### Infrastructure Modifications
-- **terraform_challenge3/challenge3.tf**
-  - Added `google_storage_bucket` resource "bucket-challenge3" to replace the deleted bucket from challenge2.tf
-  - Ensures state file upload location exists for challenge 1 (former challenge 3)
+- **terraform_module2/module2.tf**
+  - Added `google_storage_bucket` resource "bucket-module2" to replace the deleted bucket from challenge2.tf
+  - Ensures state file upload location exists for challenge 1 (former module 2)
 
 ### Script Updates
 - **challenge-setup.sh**
@@ -53,7 +53,7 @@ Remove all Kubernetes/GKE content from the GCP CTF workshop repository while pre
 - `hints/challenge5.md` → `hints/challenge3.md`
 
 ## Technical Considerations
-- **Storage Bucket Migration**: The `file-uploads-$PROJECT_ID` bucket was originally created in challenge2.tf. Moved this to terraform_challenge3 to maintain functionality for state file storage.
+- **Storage Bucket Migration**: The `file-uploads-$PROJECT_ID` bucket was originally created in challenge2.tf. Moved this to terraform_module2 to maintain functionality for state file storage.
 - **Service Account Dependencies**: The `gkeapp-file-uploader` service account was removed entirely as it was K8s-specific.
 - **Flag Numbering**: Updated flag references in challenge-setup.sh from flag3→flag1 to match new numbering.
 

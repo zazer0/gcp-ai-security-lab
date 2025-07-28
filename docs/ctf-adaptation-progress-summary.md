@@ -17,12 +17,12 @@
   - **Dependency**: Builds on Challenge 1, requires K8s context
   - **Decision**: REMOVE - Kubernetes-dependent
 
-- **Challenge 3**: Terraform state file exposure with SSH keys
+- **Module 2**: Terraform state file exposure with SSH keys
   - **Dependency**: Standalone, uses compute instances and storage
   - **Decision**: KEEP - perfect introduction to cloud secrets exposure
 
 - **Challenge 4**: Metadata service exploitation via cloud function SSRF
-  - **Dependency**: Uses compute VM from Challenge 3
+  - **Dependency**: Uses compute VM from Module 2
   - **Decision**: KEEP - excellent IMDS demonstration
 
 - **Challenge 5**: Service account impersonation chain
@@ -32,7 +32,7 @@
 ## Course Structure Developed
 
 ### Four-Module Design
-1. **Environment Secrets & State Exposure** (Modified Challenge 3)
+1. **Environment Secrets & State Exposure** (Modified Module 2)
    - Simplified to focus on terraform state risks
    - Direct relevance to AI/ML credential management
 
@@ -65,7 +65,7 @@
 ## Infrastructure Requirements
 - **Retained Components**:
   - terraform/ directory (minus challenge1.tf, challenge2.tf)
-  - terraform_challenge3/ for compute instances
+  - terraform_module2/ for compute instances
   - Cloud function in challenge4.tf
   - IAM configurations in challenge5.tf
 

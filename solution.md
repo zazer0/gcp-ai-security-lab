@@ -1,16 +1,16 @@
 # Commands
 
 <details>
-  <summary>***** Challenge 3 *****</summary>
+  <summary>***** Module 2 *****</summary>
 
-## Challenge 3
+## Module 2
 
 read state file
 #####
-    gsutil cat gs://file-uploads-$PROJECT_ID/default.tfstate
+    gsutil cat gs://file-uploads-$PROJECT_ID/infrastructure_config.tfstate
 
   <details>
-    <summary>Walkthrough Challenge 3</summary>
+    <summary>Walkthrough Module 2</summary>
     
   ssh into vm
   #####
