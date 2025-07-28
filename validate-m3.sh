@@ -167,22 +167,36 @@ print_step "Verifying VM OAuth scopes..."
 print_info "Getting access token from VM..."
 print_info "Checking OAuth scopes..."
 
-# Execute token retrieval and API call entirely within VM context
-SCOPE_OUTPUT=$(exec_on_vm "curl -s 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=\$(gcloud auth print-access-token)' 2>/dev/null" || true)
+# Debug the exact command being run
+print_info "Running OAuth scope check command on VM..."
+OAUTH_CMD='curl -s https://www.googleapis.com/oauth2/v3/tokeninfo\?access_token=$(gcloud auth print-access-token) 2>&1'
+print_info "Command: $OAUTH_CMD"
 
-# Extract scopes more reliably
-SCOPES=$(echo "$SCOPE_OUTPUT" | grep -o '"scope":"[^"]*"' | cut -d'"' -f4)
+# Execute with explicit error capturing
+if ! SCOPE_OUTPUT=$(exec_on_vm "$OAUTH_CMD"); then
+    print_fail "Failed to execute OAuth scope check on VM"
+    print_info "Error output: $SCOPE_OUTPUT"
+    exit 1
+fi
 
-if echo "$SCOPES" | grep -q "devstorage.read_only"; then
+print_info "Raw OAuth response: $(echo "$SCOPE_OUTPUT" | head -c 500)"
+
+# Extract scopes - check if grep finds anything
+if ! SCOPES=$(echo "$SCOPE_OUTPUT" | grep -o '"scope":"[^"]*"' | cut -d'"' -f4); then
+    print_info "No scopes found in response using primary method"
+    SCOPES=""
+fi
+
+if [ -n "$SCOPES" ] && echo "$SCOPES" | grep -q "devstorage.read_only"; then
     print_pass "VM has expected devstorage.read_only scope"
     print_info "VM OAuth scopes: $SCOPES"
 else
-    # Fallback check
+    # Fallback check with different pattern
     if echo "$SCOPE_OUTPUT" | grep -q "devstorage.read_only"; then
-        print_pass "VM has expected devstorage.read_only scope"
+        print_pass "VM has expected devstorage.read_only scope (found via fallback)"
     else
         print_fail "VM missing expected devstorage.read_only scope"
-        print_info "Debug output: $(echo "$SCOPE_OUTPUT" | head -c 200)"
+        print_info "Full debug output: $SCOPE_OUTPUT"
     fi
 fi
 
