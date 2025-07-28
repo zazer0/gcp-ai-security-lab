@@ -164,15 +164,26 @@ fi
 # Step 6: Check OAuth scopes on VM
 print_step "Verifying VM OAuth scopes..."
 
+print_info "Getting access token from VM..."
+print_info "Checking OAuth scopes..."
+
+# Execute token retrieval and API call entirely within VM context
 SCOPE_OUTPUT=$(exec_on_vm "curl -s 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=\$(gcloud auth print-access-token)' 2>/dev/null" || true)
 
-if echo "$SCOPE_OUTPUT" | grep -q "devstorage.read_only"; then
+# Extract scopes more reliably
+SCOPES=$(echo "$SCOPE_OUTPUT" | grep -o '"scope":"[^"]*"' | cut -d'"' -f4)
+
+if echo "$SCOPES" | grep -q "devstorage.read_only"; then
     print_pass "VM has expected devstorage.read_only scope"
-    SCOPES=$(echo "$SCOPE_OUTPUT" | jq -r '.scope' 2>/dev/null || echo "$SCOPE_OUTPUT" | grep -o '"scope": "[^"]*"' | cut -d'"' -f4)
     print_info "VM OAuth scopes: $SCOPES"
 else
-    print_fail "VM missing expected devstorage.read_only scope"
-    print_info "Debug output: $(echo "$SCOPE_OUTPUT" | head -c 200)"
+    # Fallback check
+    if echo "$SCOPE_OUTPUT" | grep -q "devstorage.read_only"; then
+        print_pass "VM has expected devstorage.read_only scope"
+    else
+        print_fail "VM missing expected devstorage.read_only scope"
+        print_info "Debug output: $(echo "$SCOPE_OUTPUT" | head -c 200)"
+    fi
 fi
 
 # Step 7: Test storage access from VM
@@ -277,13 +288,15 @@ print_step "Testing SSRF exploitation for privilege escalation..."
 
 print_info "Attempting to extract token via SSRF vulnerability..."
 
-# Function URL for gen1 functions
-FUNCTION_URL="https://$LOCATION-$PROJECT_ID.cloudfunctions.net/monitoring-function"
+# Get Gen2 function URL dynamically
+FUNCTION_URL=$(gcloud run services describe monitoring-function \
+  --region=$LOCATION \
+  --format='value(status.url)')
 print_info "Using function URL: $FUNCTION_URL"
 
 # Execute the SSRF attack from VM
 SSRF_CMD="curl -s -X POST '$FUNCTION_URL' \
--H 'Authorization: bearer \$(gcloud auth print-identity-token)' \
+-H 'Authorization: Bearer \$(gcloud auth print-identity-token)' \
 -H 'Content-Type: application/json' \
 -d '{\"metadata\": \"token\"}'"
 
