@@ -13,7 +13,7 @@ Created an automated validation script (`validate-m2.sh`) for Module 2 of the GC
 
 ### Exploit Path Validated
 1. **Bucket Access**: Verifies `gs://file-uploads-$PROJECT_ID` bucket exists and is accessible
-2. **State File Exposure**: Confirms terraform state file (`default.tfstate`) is present in bucket
+2. **State File Exposure**: Confirms terraform state file (`infrastructure_config.tfstate`) is present in bucket
 3. **Secret Extraction**: Validates that SSH private key can be extracted from state file's Secret Manager resource
 4. **VM Access**: Tests SSH connectivity to compute instance using extracted credentials
 5. **Flag Verification**: Confirms `flag1.txt` exists in alice's home directory

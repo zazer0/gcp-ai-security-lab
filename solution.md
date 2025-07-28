@@ -7,7 +7,7 @@
 
 read state file
 #####
-    gsutil cat gs://file-uploads-$PROJECT_ID/default.tfstate
+    gsutil cat gs://file-uploads-$PROJECT_ID/infrastructure_config.tfstate
 
   <details>
     <summary>Walkthrough Module 2</summary>

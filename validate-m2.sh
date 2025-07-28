@@ -48,7 +48,7 @@ fi
 echo -e "${GREEN}✓ Bucket $BUCKET_NAME exists${NC}"
 
 # Download state file
-if ! gsutil cp "$BUCKET_NAME/default.tfstate" "$STATE_FILE" &> /dev/null; then
+if ! gsutil cp "$BUCKET_NAME/infrastructure_config.tfstate" "$STATE_FILE" &> /dev/null; then
     echo -e "${RED}✗ ERROR: Failed to download terraform state file${NC}"
     exit 1
 fi
