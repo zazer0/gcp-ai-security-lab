@@ -39,7 +39,7 @@ print_info() {
 # Function to execute commands on the VM
 exec_on_vm() {
     local cmd="$1"
-    local vm_name="app-prod-instance-challenge3"
+    local vm_name="app-prod-instance-module2"
     local zone="${ZONE:-us-east1-b}"
     
     gcloud compute ssh "$vm_name" \
@@ -90,7 +90,7 @@ fi
 # Step 2: Test VM connectivity
 print_step "Testing VM connectivity..."
 
-VM_NAME="app-prod-instance-challenge3"
+VM_NAME="app-prod-instance-module2"
 ZONE="${ZONE:-us-east1-b}"
 
 # Check if VM exists
@@ -269,7 +269,7 @@ if exec_on_vm "test -f ./invoke_monitoring_function.sh && echo 'exists'" | grep 
     fi
 else
     print_fail "Invocation script not found on VM"
-    print_info "You may need to copy it: gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-challenge3:~/ --zone=us-east1-b"
+    print_info "You may need to copy it: gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=us-east1-b"
 fi
 
 # Step 11: Test SSRF exploitation
