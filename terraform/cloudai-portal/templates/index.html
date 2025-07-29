@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}CloudAI Labs - Home{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h2>Welcome to CloudAI Labs</h2>
+    <p>Your trusted platform for hosting and deploying state-of-the-art AI models in the cloud.</p>
+</div>
+
+<div class="features">
+    <div class="feature">
+        <h3>Model Hosting</h3>
+        <p>Deploy your AI models with our scalable infrastructure. Support for all major frameworks.</p>
+        <a href="/docs" class="button">View API Documentation</a>
+    </div>
+    
+    <div class="feature">
+        <h3>Enterprise Ready</h3>
+        <p>Production-grade deployment with automated CI/CD pipelines and comprehensive monitoring.</p>
+        <a href="/status" class="button">Check System Status</a>
+    </div>
+    
+    <div class="feature">
+        <h3>Real-time Monitoring</h3>
+        <p>Track your model performance and system health with our advanced monitoring dashboard.</p>
+        <a href="/monitoring" class="button">Open Monitoring</a>
+    </div>
+</div>
+
+<div class="announcement">
+    <h3>Latest Updates</h3>
+    <ul>
+        <li>New GPT-5 benchmark models available for testing (restricted access)</li>
+        <li>Improved deployment pipeline with terraform automation</li>
+        <li>Enhanced monitoring capabilities for compute instances</li>
+    </ul>
+</div>
+
+<div class="notice">
+    <p><strong>Developer Notice:</strong> For development models, use the <code>modeldata-dev-{{ project_id }}</code> bucket.</p>
+    <p>Production deployments are managed through our automated pipeline.</p>
+</div>
+{% endblock %}

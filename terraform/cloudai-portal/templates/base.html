@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CloudAI Labs{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="/">CloudAI Labs</a></h1>
+            <p class="tagline">Next-Generation AI Model Hosting Platform</p>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <a href="/">Home</a>
+            <a href="/docs">API Docs</a>
+            <a href="/status">System Status</a>
+            <a href="/monitoring">Monitoring</a>
+            <a href="/admin">Admin</a>
+        </div>
+    </nav>
+    
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 CloudAI Labs. For authorized users only.</p>
+            <p class="small">Project: {{ project_id }} | Region: {{ region }}</p>
+        </div>
+    </footer>
+</body>
+</html>
