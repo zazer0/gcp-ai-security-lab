@@ -11,6 +11,25 @@ PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID | grep projectNumber | tr 
 
 #  create directory for temporary files
 mkdir temporary_files
+
+# Module 1 setup - Create terraform_module1 directory for separate state
+echo "##########################################################"
+echo "> Beginning terraform setup for - Module 1."
+echo "##########################################################"
+mkdir -p terraform_module1
+cp terraform/module1.tf terraform_module1/
+cp terraform/variables.tf terraform_module1/
+cp terraform/provider.tf terraform_module1/
+
+cd terraform_module1
+terraform init -input=false
+terraform plan -out tf.out -var project_id="$PROJECT_ID" -var project_number="$PROJECT_NUMBER" -input=false
+terraform apply -input=false "tf.out"
+cd ../
+
+# Call Module 1 specific setup script
+./mod1-setup.sh "$PROJECT_ID" "$PROJECT_NUMBER"
+
 #
 # the compute engine for module 2 gets created in its own terraform run
 # this is done to get an extra state file that we can leak on the storage bucket
