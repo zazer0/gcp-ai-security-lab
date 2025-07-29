@@ -60,10 +60,90 @@ Single Cloud Function (`cloudai-portal`) with routes:
 
 ### Module-Specific Web Features
 
-**Module 1:** Docs page shows bucket names in code examples  
-**Module 2:** Status page reveals terraform state location  
-**Module 3:** Web form for SSRF attacks, visual token extraction  
-**Module 4:** Token-gated admin panel with IAM visualizer
+#### Module 1: Documentation Information Disclosure
+**URL:** `/docs`  
+**Vulnerability:** Hardcoded bucket names in example code  
+**Implementation:**
+```python
+# Shows bucket names directly in HTML
+example_code = """
+# Upload your model:
+gsutil cp model.pkl gs://modeldata-dev-{PROJECT_ID}/
+
+# Production models (restricted):
+gs://modeldata-prod-{PROJECT_ID}/
+"""
+```
+**Student Flow:** Visit docs → Copy bucket name → Use gsutil to explore
+
+#### Module 2: Status Page Path Traversal
+**URL:** `/status`  
+**Vulnerability:** Direct links to sensitive files  
+**Implementation:**
+```python
+# Status page shows deployment artifacts
+deployments = [{
+    'timestamp': '2024-01-15',
+    'artifacts': {
+        'state': f'https://storage.googleapis.com/modeldata-prod-{PROJECT_ID}/terraform.tfstate'
+    }
+}]
+```
+**Student Flow:** Access prod bucket (Module 1 creds) → Click tfstate link → Download and decode SSH key
+
+#### Module 3: SSRF via Monitoring Form
+**URL:** `/monitoring`  
+**Vulnerability:** User-controlled metadata endpoint parameter  
+**Implementation:**
+```python
+@app.route('/monitoring/check', methods=['POST'])
+def check():
+    # SSRF: User controls 'endpoint' parameter
+    endpoint = request.form.get('endpoint', 'email')
+    
+    # Calls vulnerable monitoring function
+    response = call_monitoring_function({'metadata': endpoint})
+    
+    # Returns raw response including tokens
+    return jsonify(response)
+```
+**Web Form:**
+```html
+<form method="POST" action="/monitoring/check">
+    <select name="endpoint">
+        <option value="email">Service Account Email</option>
+        <option value="token">Access Token (Debug)</option>
+    </select>
+    <button>Check Status</button>
+</form>
+```
+**Student Flow:** SSH to VM → Find monitoring URL → Select "token" option → Copy token from response
+
+#### Module 4: Admin Console with Token Validation
+**URL:** `/admin`  
+**Vulnerability:** Token accepted via Authorization header or form  
+**Implementation:**
+```python
+@app.route('/admin')
+def admin():
+    # Check for token from Module 3
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    
+    if not token:
+        # Show login form with hint
+        return render_template('admin_login.html', 
+            hint='Use the token from monitoring function')
+    
+    # Validate token and show IAM details
+    try:
+        service_accounts = list_service_accounts(token)
+        return render_template('admin_panel.html', 
+            accounts=service_accounts,
+            can_impersonate=check_impersonation_permissions(token))
+    except:
+        return "Invalid token", 401
+```
+**Student Flow:** Use Module 3 token → Access admin panel → See terraform-pipeline account → Test impersonation
 
 ### Implementation Phases
 
