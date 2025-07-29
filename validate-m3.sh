@@ -39,12 +39,27 @@ exec_on_vm() {
     local cmd="$1"
     local vm_name="app-prod-instance-module2"
     local zone="${ZONE:-us-east1-b}"
+    local stderr_file=$(mktemp)
     
-    gcloud compute ssh "$vm_name" \
+    # Execute command with stderr going to temp file
+    local output
+    local exit_code
+    
+    output=$(gcloud compute ssh "$vm_name" \
         --zone="$zone" \
         --command="$cmd" \
         --quiet \
-        2>&1
+        2>"$stderr_file")
+    exit_code=$?
+    
+    # Only show stderr on error or if output is unexpected
+    if [ $exit_code -ne 0 ]; then
+        cat "$stderr_file" >&2
+    fi
+    
+    rm -f "$stderr_file"
+    echo "$output"
+    return $exit_code
 }
 
 echo "====================================="
@@ -291,7 +306,7 @@ if exec_on_vm "test -f ./invoke_monitoring_function.sh && echo 'exists'" | grep 
     
     # Test the script
     print_info "Testing invocation script execution..."
-    INVOKE_TEST=$(exec_on_vm "export LOCATION=$LOCATION PROJECT_ID=$PROJECT_ID && bash ./invoke_monitoring_function.sh 2>&1")
+    INVOKE_TEST=$(exec_on_vm "export LOCATION=$LOCATION PROJECT_ID=$PROJECT_ID && bash ./invoke_monitoring_function.sh")
     
     if echo "$INVOKE_TEST" | grep -q "function_account"; then
         print_pass "Invocation script successfully calls cloud function"
