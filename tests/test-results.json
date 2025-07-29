@@ -1,0 +1,611 @@
+{
+  "config": {
+    "configFile": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/playwright.config.ts",
+    "rootDir": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests",
+    "forbidOnly": true,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        null
+      ],
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.54.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "module1-exploit.spec.ts",
+      "file": "module1-exploit.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Module 1: Portal Discovery Flow",
+          "file": "module1-exploit.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should load CloudAI portal homepage",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 683,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:20:54",
+                        "location": {
+                          "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                          "column": 54,
+                          "line": 20
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 18 |\u001b[39m     \n \u001b[90m 19 |\u001b[39m     \u001b[90m// Verify key sections are present\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 20 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=Model Hosting'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=View API Documentation'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 22 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                            "column": 54,
+                            "line": 20
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n\n\n  18 |     \n  19 |     // Verify key sections are present\n> 20 |     await expect(page.locator('text=Model Hosting')).toBeVisible();\n     |                                                      ^\n  21 |     await expect(page.locator('text=View API Documentation')).toBeVisible();\n  22 |   });\n  23 |\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:20:54"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T21:49:38.146Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                        "column": 54,
+                        "line": 20
+                      }
+                    },
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 792,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:20:54",
+                        "location": {
+                          "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                          "column": 54,
+                          "line": 20
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 18 |\u001b[39m     \n \u001b[90m 19 |\u001b[39m     \u001b[90m// Verify key sections are present\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 20 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=Model Hosting'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=View API Documentation'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 22 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                            "column": 54,
+                            "line": 20
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n\n\n  18 |     \n  19 |     // Verify key sections are present\n> 20 |     await expect(page.locator('text=Model Hosting')).toBeVisible();\n     |                                                      ^\n  21 |     await expect(page.locator('text=View API Documentation')).toBeVisible();\n  22 |   });\n  23 |\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:20:54"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-07-29T21:49:40.454Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium-retry1/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium-retry1/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                        "column": 54,
+                        "line": 20
+                      }
+                    },
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 638,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:20:54",
+                        "location": {
+                          "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                          "column": 54,
+                          "line": 20
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 18 |\u001b[39m     \n \u001b[90m 19 |\u001b[39m     \u001b[90m// Verify key sections are present\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 20 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=Model Hosting'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 21 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=View API Documentation'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 22 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 23 |\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                            "column": 54,
+                            "line": 20
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=Model Hosting') resolved to 2 elements:\n    1) <p class=\"tagline\">Next-Generation AI Model Hosting Platform</p> aka getByText('Next-Generation AI Model')\n    2) <h3>Model Hosting</h3> aka getByRole('heading', { name: 'Model Hosting' })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=Model Hosting')\u001b[22m\n\n\n  18 |     \n  19 |     // Verify key sections are present\n> 20 |     await expect(page.locator('text=Model Hosting')).toBeVisible();\n     |                                                      ^\n  21 |     await expect(page.locator('text=View API Documentation')).toBeVisible();\n  22 |   });\n  23 |\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:20:54"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 2,
+                      "startTime": "2025-07-29T21:49:42.825Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium-retry2/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium-retry2/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-a352d-oad-CloudAI-portal-homepage-chromium-retry2/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                        "column": 54,
+                        "line": 20
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ae7d31676a1db8168dfc-26c9b9652a2b7f1e6803",
+              "file": "module1-exploit.spec.ts",
+              "line": 12,
+              "column": 7
+            },
+            {
+              "title": "should expose bucket names in API documentation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 740,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T21:49:45.040Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ae7d31676a1db8168dfc-790f4c8e7aa109f57681",
+              "file": "module1-exploit.spec.ts",
+              "line": 24,
+              "column": 7
+            },
+            {
+              "title": "should reveal sensitive information in API docs",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 641,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:56:64",
+                        "location": {
+                          "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                          "column": 64,
+                          "line": 56
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 54 |\u001b[39m     \n \u001b[90m 55 |\u001b[39m     \u001b[90m// Verify authentication instructions reveal API key header\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=X-API-Key: your-api-key'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 57 |\u001b[39m     \n \u001b[90m 58 |\u001b[39m     \u001b[90m// Check for code examples that might leak information\u001b[39m\n \u001b[90m 59 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=Python Client'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                            "column": 64,
+                            "line": 56
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n\n\n  54 |     \n  55 |     // Verify authentication instructions reveal API key header\n> 56 |     await expect(page.locator('text=X-API-Key: your-api-key')).toBeVisible();\n     |                                                                ^\n  57 |     \n  58 |     // Check for code examples that might leak information\n  59 |     await expect(page.locator('text=Python Client')).toBeVisible();\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:56:64"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T21:49:45.941Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                        "column": 64,
+                        "line": 56
+                      }
+                    },
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 905,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:56:64",
+                        "location": {
+                          "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                          "column": 64,
+                          "line": 56
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 54 |\u001b[39m     \n \u001b[90m 55 |\u001b[39m     \u001b[90m// Verify authentication instructions reveal API key header\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=X-API-Key: your-api-key'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 57 |\u001b[39m     \n \u001b[90m 58 |\u001b[39m     \u001b[90m// Check for code examples that might leak information\u001b[39m\n \u001b[90m 59 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=Python Client'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                            "column": 64,
+                            "line": 56
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n\n\n  54 |     \n  55 |     // Verify authentication instructions reveal API key header\n> 56 |     await expect(page.locator('text=X-API-Key: your-api-key')).toBeVisible();\n     |                                                                ^\n  57 |     \n  58 |     // Check for code examples that might leak information\n  59 |     await expect(page.locator('text=Python Client')).toBeVisible();\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:56:64"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 1,
+                      "startTime": "2025-07-29T21:49:47.927Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium-retry1/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium-retry1/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium-retry1/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium-retry1/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                        "column": 64,
+                        "line": 56
+                      }
+                    },
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 680,
+                      "error": {
+                        "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n",
+                        "stack": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:56:64",
+                        "location": {
+                          "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                          "column": 64,
+                          "line": 56
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 54 |\u001b[39m     \n \u001b[90m 55 |\u001b[39m     \u001b[90m// Verify authentication instructions reveal API key header\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 56 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=X-API-Key: your-api-key'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 57 |\u001b[39m     \n \u001b[90m 58 |\u001b[39m     \u001b[90m// Check for code examples that might leak information\u001b[39m\n \u001b[90m 59 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mlocator(\u001b[32m'text=Python Client'\u001b[39m))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                            "column": 64,
+                            "line": 56
+                          },
+                          "message": "Error: expect.toBeVisible: Error: strict mode violation: locator('text=X-API-Key: your-api-key') resolved to 2 elements:\n    1) <pre>X-API-Key: your-api-key</pre> aka getByText('X-API-Key: your-api-key', { exact: true })\n    2) <pre>curl -X POST https://us-east1-projz-1337.cloudfun…</pre> aka getByText('curl -X POST https://us-east1')\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('text=X-API-Key: your-api-key')\u001b[22m\n\n\n  54 |     \n  55 |     // Verify authentication instructions reveal API key header\n> 56 |     await expect(page.locator('text=X-API-Key: your-api-key')).toBeVisible();\n     |                                                                ^\n  57 |     \n  58 |     // Check for code examples that might leak information\n  59 |     await expect(page.locator('text=Python Client')).toBeVisible();\n    at /home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts:56:64"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 2,
+                      "startTime": "2025-07-29T21:49:50.397Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium-retry2/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium-retry2/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/test-results/module1-exploit-Module-1-P-c3ccb-ive-information-in-API-docs-chromium-retry2/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/wazer/persist/aisb/gcp-ai-security-lab/.claude-wt/worktrees/claude-wt-feat/add-mod1/tests/module1-exploit.spec.ts",
+                        "column": 64,
+                        "line": 56
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ae7d31676a1db8168dfc-a4a4ea1c5fedf266079f",
+              "file": "module1-exploit.spec.ts",
+              "line": 48,
+              "column": 7
+            },
+            {
+              "title": "should display portal info linking to other modules",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 859,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        },
+                        {
+                          "text": "Found link to API Documentation at /docs\n"
+                        },
+                        {
+                          "text": "Found link to System Status at /status\n"
+                        },
+                        {
+                          "text": "Found link to Monitoring Dashboard at /monitoring\n"
+                        },
+                        {
+                          "text": "Found link to Admin Console at /admin\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T21:49:52.632Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ae7d31676a1db8168dfc-1fab3989f0f1b1852279",
+              "file": "module1-exploit.spec.ts",
+              "line": 67,
+              "column": 7
+            },
+            {
+              "title": "should allow unauthenticated access to public endpoints",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 665,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Navigating to CloudAI Portal at: https://cloudai-portal-rr4orxndwa-ue.a.run.app\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-07-29T21:49:53.658Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "ae7d31676a1db8168dfc-dd3c32390cf342d38572",
+              "file": "module1-exploit.spec.ts",
+              "line": 93,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-07-29T21:49:36.530Z",
+    "duration": 17896.624,
+    "expected": 3,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}
