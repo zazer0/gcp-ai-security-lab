@@ -87,6 +87,13 @@ gsutil cp terraform/script/main.py gs://cloud-function-bucket-module3-$PROJECT_I
 # remove the function zip file from the storage bucket to not mislead players to try and extract it
 gsutil rm gs://cloud-function-bucket-module3-$PROJECT_ID/main.zip
 
+# Get CloudAI Portal URL
+PORTAL_URL=$(cd terraform && terraform output -raw cloudai_portal_url 2>/dev/null || echo "Portal not deployed")
+
 echo "##########################################################"
 echo "> Challenge setup complete!"
 echo "##########################################################"
+echo ""
+echo "CloudAI Labs Portal: $PORTAL_URL"
+echo "Start by exploring: gs://modeldata-dev-$PROJECT_ID/"
+echo ""

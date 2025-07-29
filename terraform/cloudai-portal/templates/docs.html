@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}CloudAI Labs - API Documentation{% endblock %}
+
+{% block content %}
+<h2>API Documentation</h2>
+
+<div class="docs-section">
+    <h3>Getting Started</h3>
+    <p>The CloudAI Labs API provides programmatic access to our model hosting platform.</p>
+    
+    <div class="endpoint">
+        <h4>Base URL</h4>
+        <pre>{{ api_endpoint }}</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h4>Authentication</h4>
+        <p>Include your API key in the request headers:</p>
+        <pre>X-API-Key: your-api-key</pre>
+        <p class="note">Contact your administrator for API key access.</p>
+    </div>
+</div>
+
+<div class="docs-section">
+    <h3>Available Endpoints</h3>
+    
+    <div class="endpoint">
+        <h4>List Models</h4>
+        <p><code>GET /api/v1/models</code></p>
+        <p>Returns a list of available models in dev and production environments.</p>
+        <pre>curl {{ api_endpoint }}models</pre>
+    </div>
+    
+    <div class="endpoint">
+        <h4>Run Prediction</h4>
+        <p><code>POST /api/v1/predict</code></p>
+        <p>Execute inference on a deployed model.</p>
+        <pre>curl -X POST {{ api_endpoint }}predict \
+  -H "X-API-Key: your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "sentiment-v1", "text": "This is amazing!"}'</pre>
+    </div>
+</div>
+
+<div class="docs-section">
+    <h3>Model Deployment Guide</h3>
+    
+    <h4>Development Models</h4>
+    <p>For testing and development, upload your models to our development bucket:</p>
+    <pre># Upload your model file
+gsutil cp your_model.pkl gs://modeldata-dev-{{ project_id }}/models/
+
+# Upload training logs (optional)
+gsutil cp training.log gs://modeldata-dev-{{ project_id }}/logs/</pre>
+    
+    <h4>Production Deployment</h4>
+    <p>Production models are deployed through our automated CI/CD pipeline. Models are stored in:</p>
+    <pre>gs://modeldata-prod-{{ project_id }}/</pre>
+    <p class="warning">Direct access to production buckets is restricted. Use the deployment pipeline.</p>
+</div>
+
+<div class="docs-section">
+    <h3>Code Examples</h3>
+    
+    <h4>Python Client</h4>
+    <pre>import requests
+
+# List available models
+response = requests.get('{{ api_endpoint }}models')
+models = response.json()
+
+# Run prediction with API key
+headers = {'X-API-Key': 'your-api-key'}
+data = {'model': 'sentiment-v1', 'text': 'Great service!'}
+response = requests.post('{{ api_endpoint }}predict', json=data, headers=headers)
+result = response.json()</pre>
+</div>
+
+<div class="notice">
+    <p><strong>Security Note:</strong> Never commit API keys to version control. Use environment variables or secret management systems.</p>
+</div>
+{% endblock %}
