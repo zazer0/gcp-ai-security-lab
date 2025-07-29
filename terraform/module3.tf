@@ -7,12 +7,24 @@ data "archive_file" "main" {
   output_path = "${path.module}/files/main.zip"
 }
 
-data "google_service_account" "compute-account-challenge4" {
+data "google_service_account" "compute-account-module3" {
   account_id = format("%s-compute@developer.gserviceaccount.com", var.project_number)
 }
 
+resource "google_service_account" "monitoring-function" {
+  account_id   = "monitoring-function"
+  display_name = "Monitoring Function Service Account"
+  description  = "Service account for the monitoring cloud function with elevated permissions"
+}
+
+resource "google_project_iam_member" "monitoring-function-editor" {
+  project = var.project_id
+  role    = "roles/editor"
+  member  = "serviceAccount:${google_service_account.monitoring-function.email}"
+}
+
 resource "google_storage_bucket" "cloud-function-bucket" {
-  name          = format("cloud-function-bucket-challenge4-%s", var.project_id)
+  name          = format("cloud-function-bucket-module3-%s", var.project_id)
   location      = var.region
   force_destroy = true
 }
@@ -25,7 +37,7 @@ resource "google_storage_bucket_object" "gcs-function-file" {
 
 resource "google_cloudfunctions2_function" "function" {
   name        = "monitoring-function"
-  description = "This is a python function used for Challenge 4"
+  description = "This is a python function used for Module 3"
   location    = var.region
   build_config {
     runtime     = "python39"
@@ -40,7 +52,7 @@ resource "google_cloudfunctions2_function" "function" {
   }
   service_config {
     max_instance_count    = 200
-    service_account_email = data.google_service_account.compute-account-challenge4.email
+    service_account_email = google_service_account.monitoring-function.email
   }
 }
 
@@ -51,5 +63,11 @@ resource "google_cloud_run_service_iam_member" "invoker" {
   location = google_cloudfunctions2_function.function.location
   service  = google_cloudfunctions2_function.function.name
   role     = "roles/run.invoker"
-  member   = format("serviceAccount:%s", data.google_service_account.compute-account-challenge4.email)
+  member   = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
+}
+
+resource "google_project_iam_member" "compute-account-run-viewer" {
+  project = var.project_id
+  role    = "roles/run.viewer"
+  member  = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
 }

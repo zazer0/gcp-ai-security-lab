@@ -21,12 +21,12 @@
   - **Dependency**: Standalone, uses compute instances and storage
   - **Decision**: KEEP - perfect introduction to cloud secrets exposure
 
-- **Challenge 4**: Metadata service exploitation via cloud function SSRF
+- **Module 3**: Metadata service exploitation via cloud function SSRF
   - **Dependency**: Uses compute VM from Module 2
   - **Decision**: KEEP - excellent IMDS demonstration
 
 - **Challenge 5**: Service account impersonation chain
-  - **Dependency**: Uses token from Challenge 4
+  - **Dependency**: Uses token from Module 3
   - **Decision**: KEEP - showcases IAM privilege escalation
 
 ## Course Structure Developed
@@ -36,7 +36,7 @@
    - Simplified to focus on terraform state risks
    - Direct relevance to AI/ML credential management
 
-2. **Instance Metadata Service Exploitation** (Challenge 4)
+2. **Instance Metadata Service Exploitation** (Module 3)
    - Retains cloud function SSRF vulnerability
    - Universal cloud security concept
 
@@ -66,7 +66,7 @@
 - **Retained Components**:
   - terraform/ directory (minus challenge1.tf, challenge2.tf)
   - terraform_module2/ for compute instances
-  - Cloud function in challenge4.tf
+  - Cloud function in module3.tf
   - IAM configurations in challenge5.tf
 
 - **Components to Remove**:

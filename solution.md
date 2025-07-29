@@ -23,9 +23,9 @@ read state file
 #
 
 <details>
-  <summary>***** Challenge 4 *****</summary>
+  <summary>***** Module 3 *****</summary>
 
-## Challenge 4
+## Module 3
 
 show VM service account
 #####
@@ -48,15 +48,15 @@ list storage buckets from VM
     gsutil ls
 
   <details>
-    <summary>Walkthrough Challenge 4</summary>
+    <summary>Walkthrough Module 3</summary>
 
   list function source code bucket
   #####
-      gsutil ls gs://cloud-function-bucket-challenge4
+      gsutil ls gs://cloud-function-bucket-module3
 
   read source code
   #####
-      gsutil cat gs://cloud-function-bucket-challenge4/main.py
+      gsutil cat gs://cloud-function-bucket-module3/main.py
 
   execute function invocation script
   #####
@@ -64,7 +64,10 @@ list storage buckets from VM
 
   extract command to get function token
   #####
-    curl -s -X POST https://$LOCATION-$PROJECT_ID.cloudfunctions.net/monitoring-function -H "Authorization: bearer $(gcloud auth print-identity-token)" -H "Content-Type: application/json" -d '{"metadata": "token"}'
+    # Get the Gen2 function URL (Cloud Run service)
+    FUNCTION_URL=$(gcloud run services describe monitoring-function --region=$LOCATION --format='value(status.url)')
+    # Or use the hard-coded URL from invoke_monitoring_function.sh
+    curl -s -X POST $FUNCTION_URL -H "Authorization: bearer $(gcloud auth print-identity-token)" -H "Content-Type: application/json" -d '{"metadata": "token"}'
 
   save the new token in env var and check access scopes
   #####

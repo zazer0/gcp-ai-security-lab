@@ -49,7 +49,7 @@ Remove all Kubernetes/GKE content from the GCP CTF workshop repository while pre
 
 ### File Renaming
 - `hints/challenge3.md` → `hints/challenge1.md`
-- `hints/challenge4.md` → `hints/challenge2.md`
+- `hints/module3.md` → `hints/challenge2.md`
 - `hints/challenge5.md` → `hints/challenge3.md`
 
 ## Technical Considerations

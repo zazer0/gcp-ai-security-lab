@@ -19,7 +19,7 @@
   - Principle of least privilege for buckets
 
 #### **Module 2: Instance Metadata Service (IMDS) Exploitation**
-- **Attack Lab**: Challenge 4 (simplified)
+- **Attack Lab**: Module 3 (simplified)
   - Access VM via SSH from Module 1
   - Discover cloud function with SSRF vulnerability
   - Extract service account token via metadata endpoint
