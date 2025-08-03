@@ -33,4 +33,28 @@ echo "Development models - v0.1-alpha" > temporary_files/dev_models.txt
 gsutil cp temporary_files/training_logs.txt gs://modeldata-dev-$PROJECT_ID/
 gsutil cp temporary_files/dev_models.txt gs://modeldata-dev-$PROJECT_ID/
 
+# Get CloudAI Portal URL from terraform output
+PORTAL_URL=$(cd terraform && terraform output -raw cloudai_portal_url 2>/dev/null || echo "Portal deployment pending")
+
+# Create portal information file
+cat > temporary_files/portal_info.txt << EOF
+CloudAI Labs Model Portal
+========================
+
+Access our web portal for model management and monitoring:
+$PORTAL_URL
+
+Features:
+- API Documentation: $PORTAL_URL/docs
+- System Status: $PORTAL_URL/status
+- Monitoring Dashboard: $PORTAL_URL/monitoring
+- Admin Console: $PORTAL_URL/admin (requires authentication)
+
+For API access, see the documentation page.
+EOF
+
+# Upload portal info to dev bucket
+gsutil cp temporary_files/portal_info.txt gs://modeldata-dev-$PROJECT_ID/
+
 echo "> Module 1 setup complete!"
+echo "> CloudAI Portal URL: $PORTAL_URL"

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}CloudAI Labs - Monitoring Dashboard{% endblock %}
+
+{% block content %}
+<h2>Monitoring Dashboard</h2>
+
+<div class="monitoring-info">
+    <p>Monitor your compute instances and cloud functions in real-time.</p>
+    <p class="notice">This dashboard interfaces with our monitoring-function for health checks.</p>
+</div>
+
+<div class="monitoring-form">
+    <h3>Instance Health Check</h3>
+    <form id="monitoring-form" method="POST" action="/monitoring/check">
+        <div class="form-group">
+            <label for="metadata">Metadata Parameter:</label>
+            <select name="metadata" id="metadata">
+                <option value="email">Service Account Email</option>
+                <option value="token">Access Token</option>
+                <option value="scopes">OAuth Scopes</option>
+                <option value="aliases">Account Aliases</option>
+            </select>
+            <p class="help">Select which metadata to retrieve from the monitoring function.</p>
+        </div>
+        
+        <button type="submit" class="button">Check Status</button>
+    </form>
+    
+    <div id="result" class="result-box" style="display: none;">
+        <h4>Monitoring Result</h4>
+        <pre id="result-content"></pre>
+    </div>
+</div>
+
+<div class="monitoring-tips">
+    <h3>Monitoring Tips</h3>
+    <ul>
+        <li>The monitoring function runs with elevated permissions for comprehensive checks</li>
+        <li>Use the "token" parameter to retrieve authentication details</li>
+        <li>Results include compute engine heartbeat status</li>
+        <li>The function can access metadata from any GCP service</li>
+    </ul>
+</div>
+
+<div class="notice">
+    <p><strong>Developer Note:</strong> The monitoring function is deployed at:</p>
+    <pre>https://{{ region }}-{{ project_id }}.cloudfunctions.net/monitoring-function</pre>
+    <p>It accepts POST requests with a JSON body containing a "metadata" field.</p>
+</div>
+
+<script>
+document.getElementById('monitoring-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const resultDiv = document.getElementById('result');
+    const resultContent = document.getElementById('result-content');
+    
+    resultDiv.style.display = 'block';
+    resultContent.textContent = 'Loading...';
+    
+    try {
+        const response = await fetch('/monitoring/check', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        resultContent.textContent = JSON.stringify(data, null, 2);
+        
+        // Highlight if token is found
+        if (data.function_account && data.function_account.includes('ya29')) {
+            resultContent.innerHTML = resultContent.innerHTML.replace(
+                /(ya29\.[a-zA-Z0-9\-_]+)/g,
+                '<span style="background-color: yellow;">$1</span>'
+            );
+        }
+    } catch (error) {
+        resultContent.textContent = 'Error: ' + error.message;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}CloudAI Labs - Admin Login{% endblock %}
+
+{% block content %}
+<h2>Admin Console - Authentication Required</h2>
+
+<div class="login-box">
+    <h3>Access Denied</h3>
+    <p>You must provide a valid access token to access the admin console.</p>
+    
+    <div class="login-info">
+        <h4>How to Authenticate:</h4>
+        <ol>
+            <li>Obtain a valid GCP access token</li>
+            <li>Include it in the Authorization header:</li>
+        </ol>
+        <pre>Authorization: Bearer ya29.xxxxx...</pre>
+    </div>
+    
+    {% if hint %}
+    <div class="hint-box">
+        <h4>Hint:</h4>
+        <p>{{ hint }}</p>
+        <p>The monitoring function can retrieve access tokens when called with the correct parameters.</p>
+    </div>
+    {% endif %}
+    
+    <div class="example-usage">
+        <h4>Example using curl:</h4>
+        <pre>curl https://{{ request.host }}/admin \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"</pre>
+    </div>
+    
+    <div class="notice">
+        <p><strong>Note:</strong> Only service accounts with elevated permissions can access this console.</p>
+    </div>
+</div>
+{% endblock %}
