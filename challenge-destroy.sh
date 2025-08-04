@@ -251,6 +251,38 @@ import_terraform_resources() {
     fi
 }
 
+# Remove imported Module 1 resources from terraform/ state
+remove_module1_from_main_state() {
+    echo "Removing Module 1 resources from main terraform state..."
+    cd terraform
+    
+    # Initialize if needed
+    if [ ! -d ".terraform" ]; then
+        terraform init -input=false
+    fi
+    
+    # Remove Module 1 resources from state (reverse of imports done in setup)
+    echo "  Removing bucket-service-account from state..."
+    terraform state rm google_service_account.bucket-service-account 2>/dev/null || true
+    
+    echo "  Removing dev-bucket-access role from state..."
+    terraform state rm google_project_iam_custom_role.dev-bucket-access 2>/dev/null || true
+    
+    echo "  Removing modeldata buckets from state..."
+    terraform state rm google_storage_bucket.modeldata-dev 2>/dev/null || true
+    terraform state rm google_storage_bucket.modeldata-prod 2>/dev/null || true
+    
+    echo "  Removing IAM bindings from state..."
+    terraform state rm google_storage_bucket_iam_member.dev-bucket-access 2>/dev/null || true
+    terraform state rm google_storage_bucket_iam_member.prod-bucket-access 2>/dev/null || true
+    
+    echo "  Removing service account key from state..."
+    terraform state rm google_service_account_key.bucket-sa-key 2>/dev/null || true
+    
+    cd ..
+    echo "Module 1 resources removed from main terraform state"
+}
+
 # Try terraform destroy with state import if needed
 destroy_with_terraform() {
     local dir=$1
@@ -377,19 +409,30 @@ fi
 # Track if we need fallback cleanup
 NEEDS_CLEANUP=false
 
-# Try terraform destroy for main terraform directory
-if [ -d "terraform" ]; then
-    destroy_with_terraform "terraform" || NEEDS_CLEANUP=true
+# Remove imported Module 1 resources from main terraform state first
+# This prevents conflicts when terraform_module1 tries to destroy the same resources
+if [ -d "terraform" ] && [ -f "terraform/terraform.tfstate" ]; then
+    echo ""
+    echo "##########################################################"
+    echo "> Preparing states for clean destroy..."
+    echo "##########################################################"
+    remove_module1_from_main_state
 fi
 
-# Try terraform destroy for module 2
+# Now destroy in the order where each directory owns its resources
+# Module 1 first (owns the Module 1 resources)
+if [ -d "terraform_module1" ]; then
+    destroy_with_terraform "terraform_module1" || NEEDS_CLEANUP=true
+fi
+
+# Module 2 second
 if [ -d "terraform_module2" ]; then
     destroy_with_terraform "terraform_module2" || NEEDS_CLEANUP=true
 fi
 
-# Try terraform destroy for module 1
-if [ -d "terraform_module1" ]; then
-    destroy_with_terraform "terraform_module1" || NEEDS_CLEANUP=true
+# Main terraform last (Module 1 resources already removed from state)
+if [ -d "terraform" ]; then
+    destroy_with_terraform "terraform" || NEEDS_CLEANUP=true
 fi
 
 # Always run direct cleanup to catch any orphaned resources
