@@ -55,6 +55,73 @@ echo "##########################################################"
 
 cd terraform
 terraform init -input=false
+
+# Import Module 1 resources that were created in terraform_module1
+echo "> Checking for existing Module 1 resources to import..."
+
+# Import bucket-service-account if it exists
+if gcloud iam service-accounts describe "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
+    echo "  Importing bucket-service-account..."
+    terraform import \
+        -var="project_id=$PROJECT_ID" \
+        -var="project_number=$PROJECT_NUMBER" \
+        google_service_account.bucket-service-account \
+        "projects/$PROJECT_ID/serviceAccounts/bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
+        2>/dev/null || true
+fi
+
+# Import DevBucketAccess custom role if it exists
+if gcloud iam roles describe DevBucketAccess --project="$PROJECT_ID" &>/dev/null; then
+    echo "  Importing DevBucketAccess role..."
+    terraform import \
+        -var="project_id=$PROJECT_ID" \
+        -var="project_number=$PROJECT_NUMBER" \
+        google_project_iam_custom_role.dev-bucket-access \
+        "projects/$PROJECT_ID/roles/DevBucketAccess" \
+        2>/dev/null || true
+fi
+
+# Import modeldata-dev bucket if it exists
+if gsutil ls -b "gs://modeldata-dev-$PROJECT_ID" &>/dev/null; then
+    echo "  Importing modeldata-dev bucket..."
+    terraform import \
+        -var="project_id=$PROJECT_ID" \
+        -var="project_number=$PROJECT_NUMBER" \
+        google_storage_bucket.modeldata-dev \
+        "$PROJECT_ID/modeldata-dev-$PROJECT_ID" \
+        2>/dev/null || true
+fi
+
+# Import modeldata-prod bucket if it exists  
+if gsutil ls -b "gs://modeldata-prod-$PROJECT_ID" &>/dev/null; then
+    echo "  Importing modeldata-prod bucket..."
+    terraform import \
+        -var="project_id=$PROJECT_ID" \
+        -var="project_number=$PROJECT_NUMBER" \
+        google_storage_bucket.modeldata-prod \
+        "$PROJECT_ID/modeldata-prod-$PROJECT_ID" \
+        2>/dev/null || true
+fi
+
+# Import IAM bindings if they exist
+# Note: These may fail if the exact member format doesn't match, but that's ok
+echo "  Attempting to import IAM bindings..."
+terraform import \
+    -var="project_id=$PROJECT_ID" \
+    -var="project_number=$PROJECT_NUMBER" \
+    google_storage_bucket_iam_member.dev-bucket-access \
+    "b/modeldata-dev-$PROJECT_ID roles/storage.objectViewer serviceAccount:bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
+    2>/dev/null || true
+
+terraform import \
+    -var="project_id=$PROJECT_ID" \
+    -var="project_number=$PROJECT_NUMBER" \
+    google_storage_bucket_iam_member.prod-bucket-access \
+    "b/modeldata-prod-$PROJECT_ID roles/storage.objectViewer serviceAccount:bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
+    2>/dev/null || true
+
+echo "> Import complete, continuing with terraform plan..."
+
 terraform plan -out tf.out -var project_id="$PROJECT_ID" -var project_number="$PROJECT_NUMBER" -input=false
 terraform apply -input=false "tf.out"
 cd ../
