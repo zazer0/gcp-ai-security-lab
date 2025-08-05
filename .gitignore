@@ -8,6 +8,9 @@
 terraform_module1/*
 terraform_module2/*
 
+**/.terraform.tfstate.lock.info
+**/.terraform.lock.hcl
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
