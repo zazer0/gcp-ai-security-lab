@@ -14,6 +14,46 @@ check_terraform_state() {
     return 1
 }
 
+# Function to detect and report zombie resources
+detect_zombie_resources() {
+    echo "##########################################################"
+    echo "> Detecting zombie/orphaned resources..."
+    echo "##########################################################"
+    
+    local has_zombies=false
+    
+    # Check for UNKNOWN state functions
+    local zombie_funcs=$(gcloud functions list --filter="state:UNKNOWN" --format="value(name)" 2>/dev/null)
+    if [ ! -z "$zombie_funcs" ]; then
+        echo "WARNING: Found zombie cloud functions:"
+        echo "$zombie_funcs"
+        has_zombies=true
+    fi
+    
+    # Check for orphaned Cloud Run services without functions
+    local orphan_runs=$(gcloud run services list --format="value(name)" 2>/dev/null | \
+        while read service; do
+            if ! gcloud functions list --format="value(name)" 2>/dev/null | grep -q "^$service$"; then
+                echo "$service"
+            fi
+        done)
+    
+    if [ ! -z "$orphan_runs" ]; then
+        echo "WARNING: Found orphaned Cloud Run services:"
+        echo "$orphan_runs"
+        has_zombies=true
+    fi
+    
+    if [ "$has_zombies" = true ]; then
+        echo ""
+        echo "These resources will be forcefully cleaned up."
+    else
+        echo "No zombie resources detected."
+    fi
+    
+    return 0
+}
+
 # Function to clean up known resources directly via gcloud
 cleanup_gcp_resources() {
     echo "##########################################################"
@@ -57,6 +97,18 @@ cleanup_gcp_resources() {
         gcloud functions delete monitoring-function \
             --region="$REGION" --project="$PROJECT_ID" --quiet 2>/dev/null || true
     fi
+    
+    # Delete ALL cloud functions (including zombies)
+    echo "Checking for all Cloud Functions (including orphaned)..."
+    for func in $(gcloud functions list --format="value(name)" 2>/dev/null); do
+        # Get function details including region
+        func_region=$(gcloud functions list --filter="name:$func" --format="value(location)" 2>/dev/null)
+        if [ ! -z "$func_region" ]; then
+            echo "  Deleting cloud function $func in region $func_region..."
+            gcloud functions delete "$func" \
+                --region="$func_region" --project="$PROJECT_ID" --quiet 2>/dev/null || true
+        fi
+    done
     
     # Delete service account
     if gcloud iam service-accounts describe "monitoring-function@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
@@ -227,6 +279,17 @@ import_terraform_resources() {
             "cloud-function-bucket-module3-$PROJECT_ID" 2>/dev/null || true
     fi
     
+    # Check if cloudai-portal function exists and import (even if UNKNOWN)
+    if gcloud functions describe cloudai-portal --region="$REGION" &>/dev/null; then
+        echo "  Attempting to import cloudai-portal function..."
+        terraform import \
+            -var="project_id=$PROJECT_ID" \
+            -var="project_number=$PROJECT_NUMBER" \
+            google_cloudfunctions2_function.cloudai_portal \
+            "projects/$PROJECT_ID/locations/$REGION/functions/cloudai-portal" \
+            2>/dev/null || echo "    Failed to import (may be zombie), will force delete"
+    fi
+    
     # Challenge 5 resources
     # Check if terraform-pipeline service account exists and import
     if gcloud iam service-accounts describe "terraform-pipeline@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
@@ -375,6 +438,10 @@ echo "Project Number: $PROJECT_NUMBER"
 echo "Region: $REGION"
 echo ""
 
+# Detect zombie resources before cleanup
+detect_zombie_resources
+echo ""
+
 # List resources that will be destroyed
 echo "##########################################################"
 echo "> Scanning for resources to destroy..."
@@ -392,12 +459,17 @@ echo "Secrets:"
 gcloud secrets list --filter="name:ssh-key" --format="table(name)" 2>/dev/null || echo "  None found"
 
 echo ""
-echo "Cloud Functions:"
-gcloud functions list --format="table(name,region)" 2>/dev/null | grep monitoring || echo "  None found"
+echo "Cloud Functions (all states):"
+gcloud functions list --format="table(name,state,region)" 2>/dev/null || echo "  None found"
+
+# Highlight zombie functions
+echo ""
+echo "Zombie Functions (UNKNOWN state):"
+gcloud functions list --filter="state:UNKNOWN" --format="table(name,region)" 2>/dev/null || echo "  None found"
 
 echo ""
 echo "Cloud Run services:"
-gcloud run services list --format="table(name,region)" 2>/dev/null | grep cloudai-portal || echo "  None found"
+gcloud run services list --format="table(name,region)" 2>/dev/null || echo "  None found"
 
 echo ""
 read -p "Continue with destroy? (y/N): " confirm
