@@ -2,6 +2,8 @@
 
 set -e  # Exit on error
 
+FIRST_SCRIPT_ARG="$1"
+
 # Function to check terraform state
 check_terraform_state() {
     local dir=$1
@@ -621,10 +623,12 @@ echo "Cloud Run services:"
 gcloud run services list --format="table(name,region)" 2>/dev/null || echo "  None found"
 
 echo ""
-read -p "Continue with destroy? (y/N): " confirm
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-    echo "Destroy cancelled by user"
-    exit 0
+if [[ "$FIRST_SCRIPT_ARG" != '--force' ]]; then
+    read -p "Continue with destroy? (y/N): " confirm
+    if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+        echo "Destroy cancelled by user"
+        exit 0
+    fi
 fi
 
 # Track if we need fallback cleanup
