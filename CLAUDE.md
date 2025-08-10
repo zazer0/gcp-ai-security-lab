@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-This is an AI Security workshop for cloud security education, centered around "CloudAI Labs" - a fictional model hosting platform (similar to Hugging Face) with intentional security vulnerabilities. The workshop includes 4 progressive modules (~30 minutes each) teaching cloud exploitation and remediation techniques specifically relevant to AI/ML workloads.
+This is an AI Security workshop for cloud security education, centered around "CloudAI Labs" - a fictional model hosting platform (similar to Hugging Face) with intentional security vulnerabilities. The workshop is an 8-hour experience with 4 progressive modules of increasing complexity (30 min, 1 hr, 2 hrs, 3 hrs) teaching cloud exploitation and remediation techniques specifically relevant to AI/ML workloads.
 
 ## Essential Commands
 
@@ -47,22 +47,22 @@ This is an AI Security workshop for cloud security education, centered around "C
 ### Module Structure
 Each module follows a "Story → Attack → Fix" workflow:
 
-#### Module 1: Enumeration & Discovery
+#### Module 1: Enumeration & Discovery (30 minutes)
 - **Attack**: Discover predictable bucket names, find leaked service account credentials
 - **Remediation**: Remove exposed credentials, implement proper IAM roles
 - **AI Context**: "CloudAI's 'secret' GPT-5 benchmarks leaked"
 
-#### Module 2: Environment Secrets & State Exposure  
+#### Module 2: Environment Secrets & State Exposure (1 hour)
 - **Attack**: Extract SSH keys from exposed terraform state file
 - **Remediation**: Secure state storage, use Secret Manager
 - **AI Context**: "Your startup's LLM architecture leaked through deployment files"
 
-#### Module 3: Instance Metadata Service (IMDS) Exploitation
+#### Module 3: Instance Metadata Service (IMDS) Exploitation (2 hours)
 - **Attack**: Use SSRF in monitoring function to extract service account tokens
 - **Remediation**: Configure minimal VM service accounts, fix SSRF vulnerability
 - **AI Context**: "Inference costs exploded - model API accessing internal resources"
 
-#### Module 4: Service Account Misconfigurations
+#### Module 4: Service Account Misconfigurations (3 hours)
 - **Attack**: Escalate privileges through service account impersonation chain
 - **Remediation**: Remove unnecessary Token Creator permissions
 - **AI Context**: "Ex-employee claims they deleted all models using just an API token"
@@ -83,7 +83,7 @@ Each module follows a "Story → Attack → Fix" workflow:
 3. Create validation script `validate-m[N].sh`
 4. Update solution.md with complete walkthrough
 5. Test full setup/teardown cycle
-6. Ensure ~30 minute completion time
+6. Ensure appropriate completion time (30 min to 3 hours based on complexity)
 
 ### Modifying Infrastructure
 - Always test with `terraform plan` before applying
