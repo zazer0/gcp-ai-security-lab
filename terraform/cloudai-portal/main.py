@@ -37,7 +37,7 @@ def index():
 
 @app.route('/docs')
 def developer_docs():
-    """Module 1 entry point - Developer documentation"""
+    """Module 1 entry point - Model downloads"""
     return render_template('docs.html', 
         project_id=PROJECT_ID,
         region=REGION,
