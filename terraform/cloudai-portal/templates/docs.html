@@ -1,83 +1,55 @@
 {% extends "base.html" %}
 
-{% block title %}CloudAI Labs - API Documentation{% endblock %}
+{% block title %}CloudAI Labs - Model Downloads{% endblock %}
 
 {% block content %}
-<h2>API Documentation</h2>
+<div class="hint-box">
+    <h3>🎯 Module 1: Model Discovery Challenge</h3>
+    <p>Try these commands to explore CloudAI's model repository:</p>
+    <pre>gcloud storage ls
+gsutil ls gs://modeldata-dev-{{ project_id }}/
+gsutil cp gs://modeldata-dev-{{ project_id }}/[file] .</pre>
+</div>
+
+<h2>Model Downloads</h2>
+
+<p>Access CloudAI Labs' cutting-edge AI models. Our development models are freely available for testing and evaluation.</p>
 
 <div class="docs-section">
-    <h3>Getting Started</h3>
-    <p>The CloudAI Labs API provides programmatic access to our model hosting platform.</p>
+    <h3>Development Models</h3>
     
     <div class="endpoint">
-        <h4>Base URL</h4>
-        <pre>{{ api_endpoint }}</pre>
+        <h4>Bucket Path</h4>
+        <pre>gs://modeldata-dev-{{ project_id }}/</pre>
     </div>
     
+    <p>Use Google Cloud Storage tools to browse and download models:</p>
+    <pre>gsutil ls gs://modeldata-dev-{{ project_id }}/</pre>
+    
+    <p class="note">Explore the bucket contents to discover available models and resources.</p>
+</div>
+
+<div class="docs-section">
+    <h3>Production Models</h3>
+    
+    <p>Production models are restricted and require special access permissions.</p>
+    
     <div class="endpoint">
-        <h4>Authentication</h4>
-        <p>Include your API key in the request headers:</p>
-        <pre>X-API-Key: your-api-key</pre>
-        <p class="note">Contact your administrator for API key access.</p>
+        <h4>Bucket Path (Restricted)</h4>
+        <pre>gs://modeldata-prod-{{ project_id }}/</pre>
     </div>
 </div>
 
 <div class="docs-section">
-    <h3>Available Endpoints</h3>
+    <h3>Getting Started Tips</h3>
     
-    <div class="endpoint">
-        <h4>List Models</h4>
-        <p><code>GET /api/v1/models</code></p>
-        <p>Returns a list of available models in dev and production environments.</p>
-        <pre>curl {{ api_endpoint }}models</pre>
-    </div>
-    
-    <div class="endpoint">
-        <h4>Run Prediction</h4>
-        <p><code>POST /api/v1/predict</code></p>
-        <p>Execute inference on a deployed model.</p>
-        <pre>curl -X POST {{ api_endpoint }}predict \
-  -H "X-API-Key: your-api-key" \
-  -H "Content-Type: application/json" \
-  -d '{"model": "sentiment-v1", "text": "This is amazing!"}'</pre>
-    </div>
-</div>
-
-<div class="docs-section">
-    <h3>Model Deployment Guide</h3>
-    
-    <h4>Development Models</h4>
-    <p>For testing and development, upload your models to our development bucket:</p>
-    <pre># Upload your model file
-gsutil cp your_model.pkl gs://modeldata-dev-{{ project_id }}/models/
-
-# Upload training logs (optional)
-gsutil cp training.log gs://modeldata-dev-{{ project_id }}/logs/</pre>
-    
-    <h4>Production Deployment</h4>
-    <p>Production models are deployed through our automated CI/CD pipeline. Models are stored in:</p>
-    <pre>gs://modeldata-prod-{{ project_id }}/</pre>
-    <p class="warning">Direct access to production buckets is restricted. Use the deployment pipeline.</p>
-</div>
-
-<div class="docs-section">
-    <h3>Code Examples</h3>
-    
-    <h4>Python Client</h4>
-    <pre>import requests
-
-# List available models
-response = requests.get('{{ api_endpoint }}models')
-models = response.json()
-
-# Run prediction with API key
-headers = {'X-API-Key': 'your-api-key'}
-data = {'model': 'sentiment-v1', 'text': 'Great service!'}
-response = requests.post('{{ api_endpoint }}predict', json=data, headers=headers)
-result = response.json()</pre>
+    <ul>
+        <li>New to Google Cloud Storage? Install the gcloud CLI and authenticate with <code>gcloud auth login</code></li>
+        <li>Use <code>gsutil help</code> for more commands</li>
+    </ul>
 </div>
 
 <div class="notice">
-    <p><strong>Security Note:</strong> Never commit API keys to version control. Use environment variables or secret management systems.</p>
+    <p><strong>Note:</strong> Development models are for testing purposes only. Production deployment requires proper authorization.</p>
 </div>
 {% endblock %}
