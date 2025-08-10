@@ -8,8 +8,6 @@
 
 A hands-on Google Cloud Platform (GCP) security workshop featuring 3 progressive Capture The Flag (CTF) challenges. Learn cloud exploitation techniques by attacking intentionally misconfigured GCP infrastructure.
 
-Originally presented at BSidesNYC 2024. Workshop materials available in `BSidesNYC2024.pdf`.
-
 ## 🎯 Challenge Overview
 
 ### Module 1: Cloud Storage Enumeration & Discovery
