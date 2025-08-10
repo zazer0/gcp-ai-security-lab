@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-This is a GCP CTF (Capture The Flag) workshop that creates intentionally vulnerable Google Cloud Platform infrastructure for security education. It includes 3 progressive security challenges teaching cloud exploitation techniques.
+This is an AI Security workshop for cloud security education, centered around "CloudAI Labs" - a fictional model hosting platform (similar to Hugging Face) with intentional security vulnerabilities. The workshop includes 4 progressive modules (~30 minutes each) teaching cloud exploitation and remediation techniques specifically relevant to AI/ML workloads.
 
 ## Essential Commands
 
@@ -17,44 +17,85 @@ This is a GCP CTF (Capture The Flag) workshop that creates intentionally vulnera
 - **Apply changes**: `terraform apply`
 - **Destroy resources**: `terraform destroy`
 
+### Module Validation
+- **Module 1**: `./validate-m1.sh` - Validate enumeration fixes
+- **Module 2**: `./validate-m2.sh` - Validate state exposure remediation
+- **Module 3**: `./validate-m3.sh` - Validate IMDS hardening
+- **Module 4**: `./validate-m4.sh` - Validate IAM improvements
+
 
 ## Architecture Overview
 
 ### Infrastructure Layout
-- **terraform/**: Main infrastructure for challenges 2 and 3
-  - Creates storage buckets, cloud functions, service accounts
-- **terraform_module2/**: Separate infrastructure for module 2
-  - Creates compute instances with specific SSH configurations and storage bucket
+- **terraform/**: Main infrastructure for modules 3 and 4
+  - Creates cloud functions with SSRF vulnerabilities, service accounts with misconfigurations
+  - Includes Flask ML API deployment
+- **terraform_module2/**: Infrastructure for module 2
+  - Creates compute instances with SSH access and exposed terraform state
+- **terraform_module1/**: Infrastructure for module 1 (new)
+  - Creates predictable bucket naming (modeldata-dev, modeldata-prod)
+  - Deploys service account credentials in dev bucket
 - **temporary_files/**: Generated credentials (gitignored, created during setup)
 
 ### Key GCP Resources Created
-1. **Storage Buckets**: Multiple buckets with varying access controls
-2. **Compute Instances**: VMs with specific metadata/SSH configurations
-3. **Cloud Functions**: Python functions with metadata endpoint vulnerabilities
-4. **Service Accounts**: Various accounts with different permission levels
+1. **Storage Buckets**: Predictably named buckets (modeldata-dev/prod) with varying access controls
+2. **Compute Instances**: VMs with exposed SSH keys and default service accounts
+3. **Cloud Functions**: Python monitoring functions with SSRF vulnerabilities targeting metadata endpoints
+4. **Service Accounts**: Multiple accounts demonstrating privilege escalation paths
+5. **Flask ML API**: Simple model serving API demonstrating real-world AI platform patterns
 
-### Security Challenges Structure
-Each challenge (1-3) involves:
-- Specific misconfiguration or vulnerability
-- Flag hidden in GCP resources
-- Progressive difficulty
-- Solution available in solution.md
+### Module Structure
+Each module follows a "Story → Attack → Fix" workflow:
+
+#### Module 1: Enumeration & Discovery
+- **Attack**: Discover predictable bucket names, find leaked service account credentials
+- **Remediation**: Remove exposed credentials, implement proper IAM roles
+- **AI Context**: "CloudAI's 'secret' GPT-5 benchmarks leaked"
+
+#### Module 2: Environment Secrets & State Exposure  
+- **Attack**: Extract SSH keys from exposed terraform state file
+- **Remediation**: Secure state storage, use Secret Manager
+- **AI Context**: "Your startup's LLM architecture leaked through deployment files"
+
+#### Module 3: Instance Metadata Service (IMDS) Exploitation
+- **Attack**: Use SSRF in monitoring function to extract service account tokens
+- **Remediation**: Configure minimal VM service accounts, fix SSRF vulnerability
+- **AI Context**: "Inference costs exploded - model API accessing internal resources"
+
+#### Module 4: Service Account Misconfigurations
+- **Attack**: Escalate privileges through service account impersonation chain
+- **Remediation**: Remove unnecessary Token Creator permissions
+- **AI Context**: "Ex-employee claims they deleted all models using just an API token"
 
 ## Development Guidelines
 
-### Adding New Challenges
-1. Create terraform configuration in appropriate directory
-2. Add hint file to `hints/` directory
-3. Update solution.md with walkthrough
-4. Test full setup/teardown cycle
+### Module Development Workflow
+1. **Story First**: Create engaging AI/ML security scenario
+2. **Attack Lab**: Design vulnerable infrastructure in terraform
+3. **Remediation Lab**: Create fix procedures using GCP Console
+4. **Validation**: Write validation script for both attack and fix
+5. **Documentation**: Update hints/ and solution.md
+6. **Visual Aids**: Add architecture diagrams for attack paths
+
+### Adding New Modules
+1. Create terraform configuration in `terraform_module[N]/`
+2. Add hints to `hints/module[N]/` directory  
+3. Create validation script `validate-m[N].sh`
+4. Update solution.md with complete walkthrough
+5. Test full setup/teardown cycle
+6. Ensure ~30 minute completion time
 
 ### Modifying Infrastructure
 - Always test with `terraform plan` before applying
 - Ensure resources are properly tagged for cleanup
 - Update challenge-setup.sh if new manual steps needed
+- Use pre-configured gcloud authentication
+- Focus on Storage, Functions, and IAM only (no Kubernetes)
 
 ### Important Warnings
 - **NEVER deploy to production environments** - intentionally vulnerable
+- **For AI security education** - focuses on vulnerabilities specific to ML platforms
 - Requires GCP project with Owner permissions
 - All generated credentials stored in temporary_files/ (gitignored)
 - Always run challenge-destroy.sh after workshop completion
+- Pre-configured gcloud CLI access required for simplified experience
