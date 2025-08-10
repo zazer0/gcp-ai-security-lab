@@ -541,6 +541,38 @@ echo "Project Number: $PROJECT_NUMBER"
 echo "Region: $REGION"
 echo ""
 
+# Restore admin account configuration if student-workshop exists
+echo "##########################################################"
+echo "> Checking for student-workshop configuration..."
+echo "##########################################################"
+
+# Get list of configurations
+CONFIGS=$(gcloud config configurations list --format="value(name)" 2>/dev/null)
+
+if echo "$CONFIGS" | grep -q "^student-workshop$"; then
+    echo "Found student-workshop configuration. Switching back to admin-backup..."
+    
+    # Check if admin-backup exists
+    if echo "$CONFIGS" | grep -q "^admin-backup$"; then
+        # Switch to admin-backup
+        gcloud config configurations activate admin-backup
+        
+        # Delete student-workshop configuration
+        gcloud config configurations delete student-workshop --quiet
+        
+        echo "✓ Successfully restored admin account configuration"
+        echo "  - Activated: admin-backup"
+        echo "  - Deleted: student-workshop"
+    else
+        echo "WARNING: admin-backup configuration not found"
+        echo "Continuing with current configuration..."
+    fi
+else
+    echo "No student-workshop configuration found. Continuing with current configuration."
+fi
+
+echo ""
+
 # Detect zombie resources before cleanup
 detect_zombie_resources
 echo ""

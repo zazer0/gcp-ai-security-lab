@@ -42,6 +42,25 @@ resource "google_service_account_key" "bucket-sa-key" {
   service_account_id = google_service_account.bucket-service-account.name
 }
 
+# Student workshop service account with limited access
+resource "google_service_account" "student-workshop" {
+  account_id   = "student-workshop"
+  display_name = "Student Workshop Account"
+  description  = "Service account for workshop students with limited initial access"
+}
+
+# Grant student workshop account access to ONLY the dev bucket
+resource "google_storage_bucket_iam_member" "student-dev-bucket-access" {
+  bucket = google_storage_bucket.modeldata-dev.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${google_service_account.student-workshop.email}"
+}
+
+# Create service account key for student workshop
+resource "google_service_account_key" "student-workshop-key" {
+  service_account_id = google_service_account.student-workshop.name
+}
+
 # Custom role for remediation
 resource "google_project_iam_custom_role" "dev-bucket-access" {
   role_id     = "DevBucketAccess"
@@ -52,4 +71,17 @@ resource "google_project_iam_custom_role" "dev-bucket-access" {
     "storage.objects.get",
     "storage.objects.list"
   ]
+}
+
+# Output for student workshop service account key
+output "student_workshop_key" {
+  value       = google_service_account_key.student-workshop-key.private_key
+  sensitive   = true
+  description = "Base64 encoded private key for student workshop service account"
+}
+
+# Output for student workshop email
+output "student_workshop_email" {
+  value       = google_service_account.student-workshop.email
+  description = "Email of the student workshop service account"
 }

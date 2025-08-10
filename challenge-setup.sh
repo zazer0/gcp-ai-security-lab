@@ -158,6 +158,50 @@ gsutil rm gs://cloud-function-bucket-module3-$PROJECT_ID/main.zip
 PORTAL_URL=$(cd terraform && terraform output -raw cloudai_portal_url 2>/dev/null || echo "Portal not deployed")
 
 echo "##########################################################"
+echo "> Switching to student-workshop service account"
+echo "##########################################################"
+
+# Save current admin configuration as backup
+echo "> Backing up current admin gcloud configuration..."
+gcloud config configurations create admin-backup --activate 2>/dev/null || true
+gcloud config set project "$PROJECT_ID"
+gcloud config configurations list
+
+# Extract student-workshop service account key from terraform
+echo "> Extracting student-workshop service account credentials..."
+cd terraform_module1
+STUDENT_KEY=$(terraform output -raw student_workshop_key 2>/dev/null)
+STUDENT_EMAIL=$(terraform output -raw student_workshop_email 2>/dev/null)
+cd ..
+
+# Save the key to a file
+echo "$STUDENT_KEY" | base64 -d > temporary_files/student-workshop-key.json
+
+# Create new configuration for student workshop
+echo "> Creating student-workshop configuration..."
+gcloud config configurations create student-workshop --activate 2>/dev/null || true
+gcloud config set project "$PROJECT_ID"
+
+# Activate the student-workshop service account
+echo "> Activating student-workshop service account..."
+gcloud auth activate-service-account "$STUDENT_EMAIL" --key-file=temporary_files/student-workshop-key.json
+
+# Set this as the active account
+gcloud config set account "$STUDENT_EMAIL"
+
+echo ""
+echo "##########################################################"
+echo "> Account switch complete!"
+echo "##########################################################"
+echo "> Current active account: $STUDENT_EMAIL"
+echo "> This account has LIMITED permissions (dev bucket only)"
+echo "> Students must find and use bucket-service-account"
+echo "> credentials in the dev bucket to access prod resources"
+echo ""
+echo "> To switch back to admin: gcloud config configurations activate admin-backup"
+echo ""
+
+echo "##########################################################"
 echo "> Challenge setup complete!"
 echo "##########################################################"
 echo ""
