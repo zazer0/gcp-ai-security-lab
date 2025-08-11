@@ -6,32 +6,6 @@ FIRST_SCRIPT_ARG="$1"
 PROJECT_ID=""
 PROJECT_NUMBER=""
 REGION=""
-CLEANUP_RAN=false
-
-# Ensure cleanup runs on exit
-ensure_cleanup() {
-    local exit_code=$?
-    
-    # Only run if cleanup hasn't already run and we have project info
-    if [ "$CLEANUP_RAN" = "false" ] && [ ! -z "$PROJECT_ID" ] && [ ! -z "$PROJECT_NUMBER" ]; then
-        echo ""
-        echo "##########################################################"
-        echo "> Ensuring cleanup runs before exit (exit code: $exit_code)..."
-        echo "##########################################################"
-        
-        # Mark that cleanup is running to prevent double execution
-        CLEANUP_RAN=true
-        
-        # Run comprehensive cleanup
-        cleanup_all_gcp_resources_comprehensive
-        cleanup_gcp_resources
-    fi
-    
-    return $exit_code
-}
-
-# Set trap to ensure cleanup on any exit
-trap ensure_cleanup EXIT INT TERM
 
 # Function to check terraform state
 check_terraform_state() {
@@ -85,135 +59,9 @@ detect_zombie_resources() {
     return 0
 }
 
-# Function to clean up known resources directly via gcloud
-cleanup_gcp_resources() {
-    echo "##########################################################"
-    echo "> Performing direct GCP resource cleanup..."
-    echo "##########################################################"
-    
-    # Ensure we're not using student-workshop before cleanup
-    #CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
-    #if [[ "$CURRENT_ACCOUNT" == *"student-workshop"* ]]; then
-    #    echo "WARNING: Still using student-workshop account, forcing switch..."
-    #    # List all authenticated accounts and switch to first non-student account
-    #    for account in $(gcloud auth list --format="value(account)" 2>/dev/null); do
-    #        if [[ "$account" != *"student-workshop"* ]]; then
-    #            echo "Switching to account: $account"
-    #            gcloud config set account "$account"
-    #            break
-    #        fi
-    #    done
-    #fi
-    
-    # Module 2 resources
-    echo "Cleaning up Module 2 resources..."
-    
-    # Delete compute instance
-    if gcloud compute instances describe app-prod-instance-module2 --zone=us-east1-b --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Deleting compute instance app-prod-instance-module2..."
-        gcloud compute instances delete app-prod-instance-module2 \
-            --zone=us-east1-b --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Delete storage bucket
-    if gcloud storage buckets describe "gs://file-uploads-$PROJECT_ID" &>/dev/null; then
-        echo "  Deleting storage bucket file-uploads-$PROJECT_ID..."
-        gcloud storage rm -r "gs://file-uploads-$PROJECT_ID/" 2>/dev/null || true
-    fi
-    
-    # Delete secret
-    if gcloud secrets describe ssh-key --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Deleting secret ssh-key..."
-        gcloud secrets delete ssh-key --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Module 3 resources  
-    echo "Cleaning up Module 3 resources..."
-    
-    # Delete cloud function bucket
-    if gcloud storage buckets describe "gs://cloud-function-bucket-module3-$PROJECT_ID" &>/dev/null; then
-        echo "  Deleting storage bucket cloud-function-bucket-module3-$PROJECT_ID..."
-        gcloud storage rm -r "gs://cloud-function-bucket-module3-$PROJECT_ID/" 2>/dev/null || true
-    fi
-    
-    # Delete cloud function
-    if gcloud functions describe monitoring-function --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Deleting cloud function monitoring-function..."
-        gcloud functions delete monitoring-function \
-            --region="$REGION" --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Delete ALL cloud functions (including zombies)
-    echo "Checking for all Cloud Functions (including orphaned)..."
-    for func in $(gcloud functions list --format="value(name)" 2>/dev/null); do
-        # Get function details including region
-        func_region=$(gcloud functions list --filter="name:$func" --format="value(location)" 2>/dev/null)
-        if [ ! -z "$func_region" ]; then
-            echo "  Deleting cloud function $func in region $func_region..."
-            gcloud functions delete "$func" \
-                --region="$func_region" --project="$PROJECT_ID" --quiet 2>/dev/null || true
-        fi
-    done
-    
-    # Delete service account
-    if gcloud iam service-accounts describe "monitoring-function@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
-        echo "  Deleting service account monitoring-function..."
-        gcloud iam service-accounts delete \
-            "monitoring-function@$PROJECT_ID.iam.gserviceaccount.com" \
-            --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Module 1 resources
-    echo "Cleaning up Module 1 resources..."
-    
-    # Delete modeldata buckets
-    for bucket in $(gcloud storage ls | grep "gs://modeldata-.*-$PROJECT_ID/" || true); do
-        echo "  Deleting storage bucket $bucket..."
-        gcloud storage rm -r "$bucket" 2>/dev/null || true
-    done
-    
-    # Delete bucket-service-account
-    if gcloud iam service-accounts describe "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
-        echo "  Deleting service account bucket-service-account..."
-        gcloud iam service-accounts delete \
-            "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
-            --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Delete student-workshop service account
-    if gcloud iam service-accounts describe "student-workshop@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
-        echo "  Deleting service account student-workshop..."
-        gcloud iam service-accounts delete \
-            "student-workshop@$PROJECT_ID.iam.gserviceaccount.com" \
-            --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Delete DevBucketAccess custom role
-    if gcloud iam roles describe DevBucketAccess --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Deleting custom role DevBucketAccess..."
-        gcloud iam roles delete DevBucketAccess --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Challenge 5 resources
-    echo "Cleaning up Challenge 5 resources..."
-    
-    # Delete terraform-pipeline service account
-    if gcloud iam service-accounts describe "terraform-pipeline@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
-        echo "  Deleting service account terraform-pipeline..."
-        gcloud iam service-accounts delete \
-            "terraform-pipeline@$PROJECT_ID.iam.gserviceaccount.com" \
-            --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-    
-    # Delete TerraformPipelineProjectAdmin custom role
-    if gcloud iam roles describe TerraformPipelineProjectAdmin --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Deleting custom role TerraformPipelineProjectAdmin..."
-        gcloud iam roles delete TerraformPipelineProjectAdmin --project="$PROJECT_ID" --quiet 2>/dev/null || true
-    fi
-}
 
-# Comprehensive cleanup function that ensures ALL resources are deleted
-cleanup_all_gcp_resources_comprehensive() {
+# Cleanup function that ensures ALL resources are deleted
+cleanup_all_gcp_resources() {
     echo "##########################################################"
     echo "> Performing COMPREHENSIVE GCP resource cleanup..."
     echo "##########################################################"
@@ -801,17 +649,8 @@ echo ""
 echo "##########################################################"
 echo "> Running comprehensive cleanup to ensure nothing remains..."
 echo "##########################################################"
-cleanup_all_gcp_resources_comprehensive
+cleanup_all_gcp_resources
 
-# Then run the original cleanup as backup
-echo ""
-echo "##########################################################"
-echo "> Running legacy cleanup as final verification..."
-echo "##########################################################"
-cleanup_gcp_resources
-
-# Mark cleanup as completed to prevent trap from running it again
-CLEANUP_RAN=true
 
 # Clean up local files and directories
 echo ""
