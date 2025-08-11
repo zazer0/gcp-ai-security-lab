@@ -170,7 +170,7 @@ if gcloud iam service-accounts describe "bucket-service-account@$PROJECT_ID.iam.
         -var="project_id=$PROJECT_ID" \
         -var="project_number=$PROJECT_NUMBER" \
         google_service_account.bucket-service-account \
-        "projects/$PROJECT_ID/serviceAccounts/bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
+        "projects/$PROJECT_ID/serviceAccounts/bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com"
 fi
 
 # Import DevBucketAccess custom role if it exists
@@ -180,7 +180,7 @@ if gcloud iam roles describe DevBucketAccess --project="$PROJECT_ID" &>/dev/null
         -var="project_id=$PROJECT_ID" \
         -var="project_number=$PROJECT_NUMBER" \
         google_project_iam_custom_role.dev-bucket-access \
-        "projects/$PROJECT_ID/roles/DevBucketAccess" \
+        "projects/$PROJECT_ID/roles/DevBucketAccess"
 fi
 
 # Import modeldata-dev bucket if it exists
@@ -190,7 +190,7 @@ if gsutil ls -b "gs://modeldata-dev-$PROJECT_ID" &>/dev/null; then
         -var="project_id=$PROJECT_ID" \
         -var="project_number=$PROJECT_NUMBER" \
         google_storage_bucket.modeldata-dev \
-        "$PROJECT_ID/modeldata-dev-$PROJECT_ID" \
+        "$PROJECT_ID/modeldata-dev-$PROJECT_ID"
 fi
 
 # Import modeldata-prod bucket if it exists  
@@ -200,7 +200,7 @@ if gsutil ls -b "gs://modeldata-prod-$PROJECT_ID" &>/dev/null; then
         -var="project_id=$PROJECT_ID" \
         -var="project_number=$PROJECT_NUMBER" \
         google_storage_bucket.modeldata-prod \
-        "$PROJECT_ID/modeldata-prod-$PROJECT_ID" \
+        "$PROJECT_ID/modeldata-prod-$PROJECT_ID"
 fi
 
 # Import IAM bindings if they exist
