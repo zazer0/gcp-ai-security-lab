@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e  # Exit on error
-
 FIRST_SCRIPT_ARG="$1"
 
 # Function to check terraform state
@@ -151,6 +149,14 @@ cleanup_gcp_resources() {
             --project="$PROJECT_ID" --quiet 2>/dev/null || true
     fi
     
+    # Delete student-workshop service account
+    if gcloud iam service-accounts describe "student-workshop@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
+        echo "  Deleting service account student-workshop..."
+        gcloud iam service-accounts delete \
+            "student-workshop@$PROJECT_ID.iam.gserviceaccount.com" \
+            --project="$PROJECT_ID" --quiet 2>/dev/null || true
+    fi
+    
     # Delete DevBucketAccess custom role
     if gcloud iam roles describe DevBucketAccess --project="$PROJECT_ID" &>/dev/null; then
         echo "  Deleting custom role DevBucketAccess..."
@@ -283,7 +289,7 @@ cleanup_all_gcp_resources_comprehensive() {
     
     # PHASE 6: Delete service accounts
     echo "=== PHASE 6: Cleaning up service accounts ==="
-    for sa in bucket-service-account monitoring-function terraform-pipeline cloudai-portal; do
+    for sa in bucket-service-account monitoring-function terraform-pipeline cloudai-portal student-workshop; do
         if gcloud iam service-accounts describe "$sa@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
             echo "  Deleting service account $sa..."
             gcloud iam service-accounts delete \
@@ -304,7 +310,7 @@ cleanup_all_gcp_resources_comprehensive() {
     # PHASE 8: Clean up IAM policy bindings
     echo "=== PHASE 8: Cleaning up IAM bindings ==="
     # Remove specific bindings for deleted service accounts
-    for sa in bucket-service-account monitoring-function terraform-pipeline; do
+    for sa in bucket-service-account monitoring-function terraform-pipeline student-workshop; do
         member="serviceAccount:$sa@$PROJECT_ID.iam.gserviceaccount.com"
         # Get all roles for this member
         roles=$(gcloud projects get-iam-policy "$PROJECT_ID" --format="json" | \

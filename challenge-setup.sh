@@ -4,7 +4,8 @@
 if [ -z "$TF_VAR_project_id" ] ; then
     read -p "Your GCP project ID: " PROJECT_ID
 else
-    echo "Read TF Var ProjectID = ${TF_VAR_project_id}"
+    PROJECT_ID="${TF_VAR_project_id}"
+    echo "Read TF Var ProjectID = ${PROJECT_ID}"
 fi
 
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID | grep projectNumber | tr -d -c 0-9)
@@ -21,8 +22,47 @@ cp terraform/module1.tf terraform_module1/
 cp terraform/variables.tf terraform_module1/
 cp terraform/provider.tf terraform_module1/
 
+# Force cleanup any orphaned Module 1 service accounts before terraform runs
+# This ensures terraform can create them fresh without conflicts
+echo "  Checking for orphaned Module 1 service accounts..."
+
+# Clean up student-workshop service account
+if gcloud iam service-accounts describe "student-workshop@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
+    echo "  Found orphaned student-workshop service account, removing..."
+    # First remove any IAM policy bindings for this service account
+    MEMBER="serviceAccount:student-workshop@$PROJECT_ID.iam.gserviceaccount.com"
+    for role in $(gcloud projects get-iam-policy $PROJECT_ID --flatten="bindings[].members" --filter="bindings.members:$MEMBER" --format="value(bindings.role)" 2>/dev/null); do
+        echo "    Removing IAM binding for role: $role"
+        gcloud projects remove-iam-policy-binding $PROJECT_ID --member="$MEMBER" --role="$role" --quiet 2>/dev/null || true
+    done
+    # Delete the service account
+    gcloud iam service-accounts delete \
+        "student-workshop@$PROJECT_ID.iam.gserviceaccount.com" \
+        --project="$PROJECT_ID" --quiet 2>/dev/null || true
+    echo "  Cleaned up student-workshop account"
+fi
+
+# Clean up bucket-service-account 
+if gcloud iam service-accounts describe "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
+    echo "  Found orphaned bucket-service-account, removing..."
+    # First remove any IAM policy bindings for this service account
+    MEMBER="serviceAccount:bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com"
+    for role in $(gcloud projects get-iam-policy $PROJECT_ID --flatten="bindings[].members" --filter="bindings.members:$MEMBER" --format="value(bindings.role)" 2>/dev/null); do
+        echo "    Removing IAM binding for role: $role"
+        gcloud projects remove-iam-policy-binding $PROJECT_ID --member="$MEMBER" --role="$role" --quiet 2>/dev/null || true
+    done
+    # Delete the service account
+    gcloud iam service-accounts delete \
+        "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
+        --project="$PROJECT_ID" --quiet 2>/dev/null || true
+    echo "  Cleaned up bucket-service-account"
+fi
+
+echo "  Module 1 service account cleanup complete"
+
 cd terraform_module1
 terraform init -input=false
+
 terraform plan -out tf.out -var project_id="$PROJECT_ID" -var project_number="$PROJECT_NUMBER" -input=false
 terraform apply -input=false "tf.out"
 cd ../
