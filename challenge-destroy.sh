@@ -62,6 +62,20 @@ cleanup_gcp_resources() {
     echo "> Performing direct GCP resource cleanup..."
     echo "##########################################################"
     
+    # Ensure we're not using student-workshop before cleanup
+    #CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+    #if [[ "$CURRENT_ACCOUNT" == *"student-workshop"* ]]; then
+    #    echo "WARNING: Still using student-workshop account, forcing switch..."
+    #    # List all authenticated accounts and switch to first non-student account
+    #    for account in $(gcloud auth list --format="value(account)" 2>/dev/null); do
+    #        if [[ "$account" != *"student-workshop"* ]]; then
+    #            echo "Switching to account: $account"
+    #            gcloud config set account "$account"
+    #            break
+    #        fi
+    #    done
+    #fi
+    
     # Module 2 resources
     echo "Cleaning up Module 2 resources..."
     
@@ -166,6 +180,25 @@ cleanup_all_gcp_resources_comprehensive() {
     echo "##########################################################"
     echo "> Performing COMPREHENSIVE GCP resource cleanup..."
     echo "##########################################################"
+    
+    # Ensure we're not using student-workshop before cleanup
+    CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+    if [[ "$CURRENT_ACCOUNT" == *"student-workshop"* ]]; then
+        echo "WARNING: Still using student-workshop account, forcing switch..."
+        # List all authenticated accounts and switch to first non-student account
+        for account in $(gcloud auth list --format="value(account)" 2>/dev/null); do
+            if [[ "$account" != *"student-workshop"* ]]; then
+                echo "Switching to account: $account"
+                gcloud config set account "$account"
+                break
+            fi
+        done
+    fi
+    
+    # Force use admin account for cleanup operations if set
+    if [ ! -z "$ADMIN_ACCOUNT" ]; then
+        export CLOUDSDK_CORE_ACCOUNT="${ADMIN_ACCOUNT}"
+    fi
     
     # PHASE 1: Delete Cloud Functions v2 (must be before Cloud Run)
     echo "=== PHASE 1: Cleaning up ALL Cloud Functions v2 ==="
@@ -552,6 +585,10 @@ echo "##########################################################"
 CONFIGS=$(gcloud config configurations list --format="value(name)" 2>/dev/null)
 
 if echo "$CONFIGS" | grep -q "^student-workshop$"; then
+    # Revoke student-workshop credentials first to prevent auth issues
+    echo "Revoking student-workshop credentials..."
+    gcloud auth revoke student-workshop@$PROJECT_ID.iam.gserviceaccount.com --quiet 2>/dev/null || true
+    
     echo "Found student-workshop configuration. Switching back to admin-backup..."
     
     # Check if admin-backup exists
@@ -559,8 +596,25 @@ if echo "$CONFIGS" | grep -q "^student-workshop$"; then
         # Switch to admin-backup
         gcloud config configurations activate admin-backup
         
+        # Get the admin account from admin-backup configuration
+        ADMIN_ACCOUNT=$(gcloud config configurations describe admin-backup --format="value(properties.core.account)" 2>/dev/null)
+        
+        # Explicitly set the account (configuration switch alone isn't working)
+        if [ ! -z "$ADMIN_ACCOUNT" ]; then
+            echo "Setting active account to: $ADMIN_ACCOUNT"
+            gcloud config set account "$ADMIN_ACCOUNT" 2>/dev/null
+        fi
+        
+        # Verify the switch worked
+        ACTIVE_ACCOUNT=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)" 2>/dev/null)
+        if [[ "$ACTIVE_ACCOUNT" == *"student-workshop"* ]]; then
+            echo "ERROR: Failed to switch away from student-workshop account"
+            echo "Manual intervention required: gcloud auth login"
+            exit 1
+        fi
+        
         # Delete student-workshop configuration
-        gcloud config configurations delete student-workshop --quiet
+        gcloud config configurations delete student-workshop --quiet 2>/dev/null || true
         
         echo "✓ Successfully restored admin account configuration"
         echo "  - Activated: admin-backup"

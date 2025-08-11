@@ -100,6 +100,61 @@ else
     print_pass "gsutil is available"
 fi
 
+# Save original gcloud configuration
+ORIGINAL_CONFIG=$(gcloud config get-value account 2>/dev/null)
+
+# Set up trap to restore original config on exit
+trap 'gcloud config set account "$ORIGINAL_CONFIG" 2>/dev/null' EXIT
+
+# Verify student-workshop configuration restrictions
+print_step "Verifying student-workshop configuration restrictions..."
+
+# Check that student-workshop configuration exists
+if ! gcloud config configurations list --format='value(name)' | grep -q '^student-workshop$'; then
+    print_fail "student-workshop configuration does not exist"
+    echo "Please create the student-workshop configuration first"
+    exit 1
+else
+    print_pass "student-workshop configuration exists"
+fi
+
+# Switch to student-workshop for testing
+print_info "Switching to student-workshop configuration for permission tests..."
+gcloud config configurations activate student-workshop 2>/dev/null
+
+# Test 1: Verify student-workshop CANNOT access cloud-function-bucket-module3
+print_info "Testing student-workshop bucket access restrictions..."
+if gsutil ls "gs://cloud-function-bucket-module3-$PROJECT_ID/" >/dev/null 2>&1; then
+    print_fail "student-workshop CAN access cloud-function-bucket-module3 (should be denied)"
+    FAILED=$((FAILED + 1))
+else
+    print_pass "student-workshop correctly denied access to cloud-function-bucket-module3"
+    PASSED=$((PASSED + 1))
+fi
+
+# Test 2: Verify student-workshop CANNOT list cloud functions
+print_info "Testing student-workshop cloud functions restrictions..."
+if gcloud functions list --region="$LOCATION" >/dev/null 2>&1; then
+    print_fail "student-workshop CAN list cloud functions (should be denied)"
+    FAILED=$((FAILED + 1))
+else
+    print_pass "student-workshop correctly denied listing cloud functions"
+    PASSED=$((PASSED + 1))
+fi
+
+# Switch to admin-backup for remaining tests
+print_info "Switching to admin-backup configuration for remaining tests..."
+gcloud config configurations activate admin-backup 2>/dev/null
+
+# Verify we're now using admin-backup
+CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+if echo "$CURRENT_ACCOUNT" | grep -q "admin"; then
+    print_pass "Successfully switched to admin account: $CURRENT_ACCOUNT"
+else
+    print_fail "Failed to switch to admin account, current: $CURRENT_ACCOUNT"
+    exit 1
+fi
+
 # Step 2: Test VM connectivity
 print_step "Testing VM connectivity..."
 
