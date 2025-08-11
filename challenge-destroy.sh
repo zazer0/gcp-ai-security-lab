@@ -2,6 +2,37 @@
 
 FIRST_SCRIPT_ARG="$1"
 
+# Global variables for cleanup - will be set later
+PROJECT_ID=""
+PROJECT_NUMBER=""
+REGION=""
+CLEANUP_RAN=false
+
+# Ensure cleanup runs on exit
+ensure_cleanup() {
+    local exit_code=$?
+    
+    # Only run if cleanup hasn't already run and we have project info
+    if [ "$CLEANUP_RAN" = "false" ] && [ ! -z "$PROJECT_ID" ] && [ ! -z "$PROJECT_NUMBER" ]; then
+        echo ""
+        echo "##########################################################"
+        echo "> Ensuring cleanup runs before exit (exit code: $exit_code)..."
+        echo "##########################################################"
+        
+        # Mark that cleanup is running to prevent double execution
+        CLEANUP_RAN=true
+        
+        # Run comprehensive cleanup
+        cleanup_all_gcp_resources_comprehensive
+        cleanup_gcp_resources
+    fi
+    
+    return $exit_code
+}
+
+# Set trap to ensure cleanup on any exit
+trap ensure_cleanup EXIT INT TERM
+
 # Function to check terraform state
 check_terraform_state() {
     local dir=$1
@@ -475,11 +506,20 @@ import_terraform_resources() {
 # Remove imported Module 1 resources from terraform/ state
 remove_module1_from_main_state() {
     echo "Removing Module 1 resources from main terraform state..."
+    
+    # Check if terraform directory exists first
+    if [ ! -d "terraform" ]; then
+        echo "  terraform directory does not exist, skipping state cleanup"
+        return 0
+    fi
+    
     cd terraform
     
     # Initialize if needed
     if [ ! -d ".terraform" ]; then
-        terraform init -input=false
+        terraform init -input=false 2>/dev/null || {
+            echo "  Warning: terraform init failed, continuing anyway"
+        }
     fi
     
     # Remove Module 1 resources from state (reverse of imports done in setup)
@@ -521,7 +561,11 @@ destroy_with_terraform() {
     # Initialize if needed
     if [ ! -d ".terraform" ]; then
         echo "Initializing terraform in $dir..."
-        terraform init -input=false
+        terraform init -input=false 2>/dev/null || {
+            echo "  Warning: terraform init failed in $dir, continuing with cleanup"
+            cd ..
+            return 1
+        }
     fi
     
     # Check if state is empty but resources exist
@@ -765,6 +809,9 @@ echo "##########################################################"
 echo "> Running legacy cleanup as final verification..."
 echo "##########################################################"
 cleanup_gcp_resources
+
+# Mark cleanup as completed to prevent trap from running it again
+CLEANUP_RAN=true
 
 # Clean up local files and directories
 echo ""
