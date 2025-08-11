@@ -163,8 +163,37 @@ echo "##########################################################"
 
 # Save current admin configuration as backup
 echo "> Backing up current admin gcloud configuration..."
-gcloud config configurations create admin-backup --activate 2>/dev/null || true
-gcloud config set project "$PROJECT_ID"
+
+# Check if we should use existing default configuration
+CURRENT_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)" 2>/dev/null)
+CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+
+if [ "$CURRENT_CONFIG" = "default" ]; then
+    # We're in default config, create admin-backup that mirrors it
+    echo "  Current configuration is 'default' with account: $CURRENT_ACCOUNT"
+    
+    # Create admin-backup if it doesn't exist
+    if ! gcloud config configurations describe admin-backup &>/dev/null; then
+        gcloud config configurations create admin-backup 2>/dev/null || true
+    fi
+    
+    # Switch to admin-backup and copy settings from default
+    gcloud config configurations activate admin-backup
+    gcloud config set project "$PROJECT_ID"
+    gcloud config set account "$CURRENT_ACCOUNT"
+    
+    echo "  Created admin-backup configuration with account: $CURRENT_ACCOUNT"
+else
+    # We're in some other config, just ensure admin-backup exists
+    if ! gcloud config configurations describe admin-backup &>/dev/null; then
+        gcloud config configurations create admin-backup --activate 2>/dev/null || true
+        gcloud config set project "$PROJECT_ID"
+        gcloud config set account "$CURRENT_ACCOUNT"
+    else
+        gcloud config configurations activate admin-backup
+    fi
+fi
+
 gcloud config configurations list
 
 # Extract student-workshop service account key from terraform

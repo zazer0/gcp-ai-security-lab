@@ -185,14 +185,41 @@ cleanup_all_gcp_resources_comprehensive() {
     CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
     if [[ "$CURRENT_ACCOUNT" == *"student-workshop"* ]]; then
         echo "WARNING: Still using student-workshop account, forcing switch..."
-        # List all authenticated accounts and switch to first non-student account
-        for account in $(gcloud auth list --format="value(account)" 2>/dev/null); do
-            if [[ "$account" != *"student-workshop"* ]]; then
-                echo "Switching to account: $account"
-                gcloud config set account "$account"
-                break
+        
+        # First try to use admin-backup configuration (preferred method)
+        if gcloud config configurations describe admin-backup &>/dev/null; then
+            echo "Found admin-backup configuration, switching to it..."
+            gcloud config configurations activate admin-backup
+            
+            # Get the admin account from admin-backup configuration
+            ADMIN_ACCOUNT=$(gcloud config configurations describe admin-backup --format="value(properties.core.account)" 2>/dev/null)
+            
+            if [ ! -z "$ADMIN_ACCOUNT" ]; then
+                echo "Setting active account to: $ADMIN_ACCOUNT"
+                gcloud config set account "$ADMIN_ACCOUNT" 2>/dev/null
             fi
-        done
+        else
+            # Fallback: Use default configuration
+            echo "admin-backup not found, switching to default configuration..."
+            gcloud config configurations activate default
+            
+            # Get the account from default configuration
+            DEFAULT_ACCOUNT=$(gcloud config configurations describe default --format="value(properties.core.account)" 2>/dev/null)
+            
+            if [ ! -z "$DEFAULT_ACCOUNT" ]; then
+                echo "Setting active account to: $DEFAULT_ACCOUNT"
+                gcloud config set account "$DEFAULT_ACCOUNT" 2>/dev/null
+                ADMIN_ACCOUNT="$DEFAULT_ACCOUNT"
+            fi
+        fi
+        
+        # Verify the switch worked
+        CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+        if [[ "$CURRENT_ACCOUNT" == *"student-workshop"* ]]; then
+            echo "ERROR: Failed to switch away from student-workshop account"
+            echo "No suitable admin account found. Please run: gcloud auth login"
+            exit 1
+        fi
     fi
     
     # Force use admin account for cleanup operations if set
