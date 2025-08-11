@@ -163,6 +163,16 @@ fi
 # Import Module 1 resources that were created in terraform_module1
 echo "> Checking for existing Module 1 resources to import..."
 
+# Import student-workshop service account if it exists
+if gcloud iam service-accounts describe "student-workshop@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
+    echo "  Importing student-workshop service account..."
+    terraform import \
+        -var="project_id=$PROJECT_ID" \
+        -var="project_number=$PROJECT_NUMBER" \
+        google_service_account.student-workshop \
+        "projects/$PROJECT_ID/serviceAccounts/student-workshop@$PROJECT_ID.iam.gserviceaccount.com"
+fi
+
 # Import bucket-service-account if it exists
 if gcloud iam service-accounts describe "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
     echo "  Importing bucket-service-account..."
