@@ -186,38 +186,25 @@ cleanup_all_gcp_resources_comprehensive() {
     if [[ "$CURRENT_ACCOUNT" == *"student-workshop"* ]]; then
         echo "WARNING: Still using student-workshop account, forcing switch..."
         
-        # First try to use admin-backup configuration (preferred method)
-        if gcloud config configurations describe admin-backup &>/dev/null; then
-            echo "Found admin-backup configuration, switching to it..."
-            gcloud config configurations activate admin-backup
-            
-            # Get the admin account from admin-backup configuration
-            ADMIN_ACCOUNT=$(gcloud config configurations describe admin-backup --format="value(properties.core.account)" 2>/dev/null)
-            
-            if [ ! -z "$ADMIN_ACCOUNT" ]; then
-                echo "Setting active account to: $ADMIN_ACCOUNT"
-                gcloud config set account "$ADMIN_ACCOUNT" 2>/dev/null
-            fi
+        # Always use default configuration (admin-backup gets deleted later anyway)
+        echo "Switching to default configuration..."
+        gcloud config configurations activate default
+        
+        DEFAULT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+        if [ ! -z "$DEFAULT_ACCOUNT" ]; then
+            echo "Setting active account to: $DEFAULT_ACCOUNT"
+            gcloud config set account "$DEFAULT_ACCOUNT" 2>/dev/null
+            ADMIN_ACCOUNT="$DEFAULT_ACCOUNT"
         else
-            # Fallback: Use default configuration
-            echo "admin-backup not found, switching to default configuration..."
-            gcloud config configurations activate default
-            
-            # Get the account from default configuration
-            DEFAULT_ACCOUNT=$(gcloud config configurations describe default --format="value(properties.core.account)" 2>/dev/null)
-            
-            if [ ! -z "$DEFAULT_ACCOUNT" ]; then
-                echo "Setting active account to: $DEFAULT_ACCOUNT"
-                gcloud config set account "$DEFAULT_ACCOUNT" 2>/dev/null
-                ADMIN_ACCOUNT="$DEFAULT_ACCOUNT"
-            fi
+            echo "ERROR: No account in default configuration"
+            echo "Please run: gcloud auth login"
+            exit 1
         fi
         
         # Verify the switch worked
         CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
         if [[ "$CURRENT_ACCOUNT" == *"student-workshop"* ]]; then
             echo "ERROR: Failed to switch away from student-workshop account"
-            echo "No suitable admin account found. Please run: gcloud auth login"
             exit 1
         fi
     fi
@@ -589,8 +576,21 @@ else
     echo "Using project ID from environment: $PROJECT_ID"
 fi
 
-PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" 2>/dev/null | grep projectNumber | tr -d -c 0-9)
-REGION="us-east1"
+
+# Get project number
+if [ -z "$TF_VAR_project_number" ]; then
+    read -p "Your GCP project number: " PROJECT_NUMBER
+else
+    PROJECT_NUMBER="$TF_VAR_project_number"
+    echo "Using project numebr from environment: $PROJECT_NUMBER"
+fi
+
+if [ -z "$REGION" ]; then
+    REGION="us-east1"
+    echo "Using region: $REGION"
+else
+    echo "Using region from environment: $REGION"
+fi
 
 if [ -z "$PROJECT_NUMBER" ]; then
     echo "Error: Could not get project number for project $PROJECT_ID"
@@ -616,40 +616,45 @@ if echo "$CONFIGS" | grep -q "^student-workshop$"; then
     echo "Revoking student-workshop credentials..."
     gcloud auth revoke student-workshop@$PROJECT_ID.iam.gserviceaccount.com --quiet 2>/dev/null || true
     
-    echo "Found student-workshop configuration. Switching back to admin-backup..."
+    echo "Found student-workshop configuration. Restoring to default configuration..."
     
-    # Check if admin-backup exists
-    if echo "$CONFIGS" | grep -q "^admin-backup$"; then
-        # Switch to admin-backup
-        gcloud config configurations activate admin-backup
-        
-        # Get the admin account from admin-backup configuration
-        ADMIN_ACCOUNT=$(gcloud config configurations describe admin-backup --format="value(properties.core.account)" 2>/dev/null)
-        
-        # Explicitly set the account (configuration switch alone isn't working)
-        if [ ! -z "$ADMIN_ACCOUNT" ]; then
-            echo "Setting active account to: $ADMIN_ACCOUNT"
-            gcloud config set account "$ADMIN_ACCOUNT" 2>/dev/null
-        fi
-        
-        # Verify the switch worked
-        ACTIVE_ACCOUNT=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)" 2>/dev/null)
-        if [[ "$ACTIVE_ACCOUNT" == *"student-workshop"* ]]; then
-            echo "ERROR: Failed to switch away from student-workshop account"
-            echo "Manual intervention required: gcloud auth login"
-            exit 1
-        fi
-        
-        # Delete student-workshop configuration
-        gcloud config configurations delete student-workshop --quiet 2>/dev/null || true
-        
-        echo "✓ Successfully restored admin account configuration"
-        echo "  - Activated: admin-backup"
-        echo "  - Deleted: student-workshop"
+    # Always switch to default configuration instead of admin-backup
+    gcloud config configurations activate default
+    
+    # Get the account from default configuration
+    DEFAULT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+    
+    # Explicitly set the account (configuration switch alone isn't always enough)
+    if [ ! -z "$DEFAULT_ACCOUNT" ]; then
+        echo "Setting active account to: $DEFAULT_ACCOUNT"
+        gcloud config set account "$DEFAULT_ACCOUNT" 2>/dev/null
     else
-        echo "WARNING: admin-backup configuration not found"
-        echo "Continuing with current configuration..."
+        echo "ERROR: No account found in default configuration"
+        echo "Please run: gcloud auth login"
+        exit 1
     fi
+    
+    # Verify the switch worked
+    ACTIVE_ACCOUNT=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)" 2>/dev/null)
+    if [[ "$ACTIVE_ACCOUNT" == *"student-workshop"* ]]; then
+        echo "ERROR: Failed to switch away from student-workshop account"
+        echo "Manual intervention required: gcloud auth login"
+        exit 1
+    fi
+    
+    # Delete both student-workshop and admin-backup configurations for clean state
+    echo "Cleaning up configurations..."
+    gcloud config configurations delete student-workshop --quiet 2>/dev/null || true
+    
+    # Also delete admin-backup if it exists (since we're not using it anymore)
+    if echo "$CONFIGS" | grep -q "^admin-backup$"; then
+        gcloud config configurations delete admin-backup --quiet 2>/dev/null || true
+        echo "  - Deleted: admin-backup (no longer needed)"
+    fi
+    
+    echo "✓ Successfully restored default configuration"
+    echo "  - Activated: default"
+    echo "  - Deleted: student-workshop"
 else
     echo "No student-workshop configuration found. Continuing with current configuration."
 fi

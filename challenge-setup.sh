@@ -161,38 +161,40 @@ echo "##########################################################"
 echo "> Switching to student-workshop service account"
 echo "##########################################################"
 
-# Save current admin configuration as backup
-echo "> Backing up current admin gcloud configuration..."
+echo "##########################################################"
+echo "> Ensuring clean admin configuration backup"
+echo "##########################################################"
 
-# Check if we should use existing default configuration
-CURRENT_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)" 2>/dev/null)
-CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+# ALWAYS start from default configuration to ensure clean state
+echo "> Switching to default configuration..."
+gcloud config configurations activate default
 
-if [ "$CURRENT_CONFIG" = "default" ]; then
-    # We're in default config, create admin-backup that mirrors it
-    echo "  Current configuration is 'default' with account: $CURRENT_ACCOUNT"
-    
-    # Create admin-backup if it doesn't exist
-    if ! gcloud config configurations describe admin-backup &>/dev/null; then
-        gcloud config configurations create admin-backup 2>/dev/null || true
-    fi
-    
-    # Switch to admin-backup and copy settings from default
-    gcloud config configurations activate admin-backup
-    gcloud config set project "$PROJECT_ID"
-    gcloud config set account "$CURRENT_ACCOUNT"
-    
-    echo "  Created admin-backup configuration with account: $CURRENT_ACCOUNT"
-else
-    # We're in some other config, just ensure admin-backup exists
-    if ! gcloud config configurations describe admin-backup &>/dev/null; then
-        gcloud config configurations create admin-backup --activate 2>/dev/null || true
-        gcloud config set project "$PROJECT_ID"
-        gcloud config set account "$CURRENT_ACCOUNT"
-    else
-        gcloud config configurations activate admin-backup
-    fi
+# Get the admin account from default configuration
+DEFAULT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
+DEFAULT_PROJECT=$(gcloud config get-value project 2>/dev/null)
+
+if [ -z "$DEFAULT_ACCOUNT" ]; then
+    echo "ERROR: No account found in default configuration"
+    echo "Please run: gcloud auth login"
+    exit 1
 fi
+
+echo "  Default configuration account: $DEFAULT_ACCOUNT"
+
+# Delete any existing admin-backup to ensure it's clean
+if gcloud config configurations describe admin-backup &>/dev/null; then
+    echo "  Removing existing admin-backup configuration..."
+    gcloud config configurations delete admin-backup --quiet 2>/dev/null || true
+fi
+
+# Create fresh admin-backup from default
+echo "  Creating fresh admin-backup configuration..."
+gcloud config configurations create admin-backup 2>/dev/null
+gcloud config configurations activate admin-backup
+gcloud config set project "$PROJECT_ID"
+gcloud config set account "$DEFAULT_ACCOUNT"
+
+echo "✓ Admin backup created with account: $DEFAULT_ACCOUNT"
 
 gcloud config configurations list
 
