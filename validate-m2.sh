@@ -21,7 +21,8 @@ echo -e "${GREEN}✓ PROJECT_ID is set: $PROJECT_ID${NC}"
 
 # Check for required tools
 for tool in gcloud gsutil jq ssh base64; do
-    if ! command -v $tool &> /dev/null; then
+    command -v "$tool"
+    if [ $? -ne 0 ]; then
         echo -e "${RED}✗ ERROR: $tool is not installed${NC}"
         exit 1
     fi
@@ -32,14 +33,17 @@ echo -e "${GREEN}✓ All required tools are installed${NC}"
 echo -e "\n${YELLOW}[2/8] Validating student-workshop configuration...${NC}"
 
 # Save current configuration details
-ORIGINAL_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)" 2>/dev/null)
-ORIGINAL_ACCOUNT=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)" 2>/dev/null)
-ORIGINAL_PROJECT=$(gcloud config get-value project 2>/dev/null)
+ORIGINAL_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
+ORIGINAL_ACCOUNT=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)")
+ORIGINAL_PROJECT=$(gcloud config get-value project)
 
 # Set up trap to restore original configuration on exit
 restore_config() {
     if [ -n "$ORIGINAL_CONFIG" ]; then
-        gcloud config configurations activate "$ORIGINAL_CONFIG" 2>/dev/null || true
+        gcloud config configurations activate "$ORIGINAL_CONFIG"
+        if [ $? -ne 0 ]; then
+            echo "Warning: Failed to restore config, but continuing"
+        fi
     fi
 }
 trap "restore_config; rm -rf $TEMP_DIR" EXIT
@@ -47,7 +51,8 @@ trap "restore_config; rm -rf $TEMP_DIR" EXIT
 echo -e "${GREEN}✓ Saved original gcloud configuration: $ORIGINAL_CONFIG${NC}"
 
 # Check that student-workshop configuration exists
-if ! gcloud config configurations list --format="value(name)" 2>/dev/null | grep -q "^student-workshop$"; then
+gcloud config configurations list --format="value(name)" | grep -q "^student-workshop$"
+if [ $? -ne 0 ]; then
     echo -e "${RED}✗ ERROR: student-workshop configuration does not exist${NC}"
     echo "Please create it with: gcloud config configurations create student-workshop"
     echo "Then activate the student-workshop service account"
@@ -59,7 +64,8 @@ echo -e "${GREEN}✓ student-workshop configuration exists${NC}"
 echo -e "\n${YELLOW}[3/8] Testing student-workshop permissions...${NC}"
 
 # Switch to student-workshop configuration
-if ! gcloud config configurations activate student-workshop 2>/dev/null; then
+gcloud config configurations activate student-workshop
+if [ $? -ne 0 ]; then
     echo -e "${RED}✗ ERROR: Failed to activate student-workshop configuration${NC}"
     exit 1
 fi
@@ -68,7 +74,7 @@ fi
 BUCKET_NAME="gs://file-uploads-$PROJECT_ID"
 if gsutil ls "$BUCKET_NAME" 2>&1 | grep -q "AccessDeniedException\|403"; then
     echo -e "${GREEN}✓ student-workshop correctly denied access to $BUCKET_NAME${NC}"
-elif gsutil ls "$BUCKET_NAME" &> /dev/null; then
+elif gsutil ls "$BUCKET_NAME"; then
     echo -e "${RED}✗ ERROR: student-workshop has access to $BUCKET_NAME (should be denied)${NC}"
     exit 1
 else
@@ -84,7 +90,7 @@ fi
 # Test 2: Verify student-workshop CANNOT list compute instances
 if gcloud compute instances list --project="$PROJECT_ID" 2>&1 | grep -q "Required 'compute.instances.list' permission\|403\|Permission\|does not have compute.instances.list"; then
     echo -e "${GREEN}✓ student-workshop correctly denied compute instance listing${NC}"
-elif gcloud compute instances list --project="$PROJECT_ID" &> /dev/null; then
+elif gcloud compute instances list --project="$PROJECT_ID"; then
     echo -e "${RED}✗ ERROR: student-workshop can list compute instances (should be denied)${NC}"
     exit 1
 else
@@ -93,9 +99,13 @@ fi
 
 # Switch to admin-backup for remaining tests
 echo -e "${GREEN}✓ Switching to admin-backup configuration for remaining tests${NC}"
-if ! gcloud config configurations activate admin-backup 2>/dev/null; then
+gcloud config configurations activate admin-backup
+if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠ WARNING: admin-backup configuration not found, using original: $ORIGINAL_CONFIG${NC}"
-    gcloud config configurations activate "$ORIGINAL_CONFIG" 2>/dev/null || true
+    gcloud config configurations activate "$ORIGINAL_CONFIG"
+    if [ $? -ne 0 ]; then
+        echo "Warning: Failed to restore config, but continuing"
+    fi
 fi
 
 # Create temporary directory
@@ -110,21 +120,24 @@ echo -e "\n${YELLOW}[4/8] Validating storage bucket and state file...${NC}"
 BUCKET_NAME="gs://file-uploads-$PROJECT_ID"
 STATE_FILE="$TEMP_DIR/terraform.tfstate"
 
-if ! gsutil ls "$BUCKET_NAME" &> /dev/null; then
+gsutil ls "$BUCKET_NAME"
+if [ $? -ne 0 ]; then
     echo -e "${RED}✗ ERROR: Bucket $BUCKET_NAME does not exist${NC}"
     exit 1
 fi
 echo -e "${GREEN}✓ Bucket $BUCKET_NAME exists${NC}"
 
 # Download state file
-if ! gsutil cp "$BUCKET_NAME/infrastructure_config.tfstate" "$STATE_FILE" &> /dev/null; then
+gsutil cp "$BUCKET_NAME/infrastructure_config.tfstate" "$STATE_FILE"
+if [ $? -ne 0 ]; then
     echo -e "${RED}✗ ERROR: Failed to download terraform state file${NC}"
     exit 1
 fi
 echo -e "${GREEN}✓ Downloaded terraform state file${NC}"
 
 # Verify it's valid JSON
-if ! jq empty "$STATE_FILE" 2> /dev/null; then
+jq empty "$STATE_FILE"
+if [ $? -ne 0 ]; then
     echo -e "${RED}✗ ERROR: State file is not valid JSON${NC}"
     exit 1
 fi
@@ -160,7 +173,8 @@ echo -e "${GREEN}✓ Found VM external IP: $VM_IP${NC}"
 # Test SSH connectivity
 echo -e "\n${YELLOW}[6/8] Testing SSH connectivity...${NC}"
 
-if ! ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=10 alice@$VM_IP "echo 'SSH connection successful'" &> /dev/null; then
+ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "alice@$VM_IP" "echo 'SSH connection successful'"
+if [ $? -ne 0 ]; then
     echo -e "${RED}✗ ERROR: Cannot establish SSH connection to alice@$VM_IP${NC}"
     exit 1
 fi
@@ -169,7 +183,12 @@ echo -e "${GREEN}✓ Successfully connected via SSH as alice@$VM_IP${NC}"
 # Verify flag exists
 echo -e "\n${YELLOW}[7/8] Verifying challenge components on VM...${NC}"
 
-FLAG_EXISTS=$(ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no alice@$VM_IP "[ -f /home/alice/flag1.txt ] && echo 'true' || echo 'false'" 2>/dev/null)
+ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "alice@$VM_IP" "[ -f /home/alice/flag1.txt ]"
+if [ $? -eq 0 ]; then
+    FLAG_EXISTS="true"
+else
+    FLAG_EXISTS="false"
+fi
 
 if [ "$FLAG_EXISTS" != "true" ]; then
     echo -e "${RED}✗ ERROR: flag1.txt not found in alice's home directory${NC}"
@@ -178,9 +197,10 @@ fi
 echo -e "${GREEN}✓ flag1.txt exists in /home/alice/${NC}"
 
 # Verify VM service account
-SA_EMAIL=$(ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no alice@$VM_IP "gcloud auth list --filter=status:ACTIVE --format='value(account)'" 2>/dev/null)
+SA_EMAIL=$(ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "alice@$VM_IP" "gcloud auth list --filter=status:ACTIVE --format='value(account)'")
 
-if [[ ! "$SA_EMAIL" =~ compute@developer.gserviceaccount.com$ ]]; then
+echo "$SA_EMAIL" | grep -q "compute@developer.gserviceaccount.com$"
+if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠ WARNING: VM is not using expected compute service account${NC}"
     echo "  Current SA: $SA_EMAIL"
 else
@@ -188,7 +208,12 @@ else
 fi
 
 # Verify invoke_monitoring_function.sh exists (for challenge 4)
-SCRIPT_EXISTS=$(ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no alice@$VM_IP "[ -f /home/alice/invoke_monitoring_function.sh ] && echo 'true' || echo 'false'" 2>/dev/null)
+ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "alice@$VM_IP" "[ -f /home/alice/invoke_monitoring_function.sh ]"
+if [ $? -eq 0 ]; then
+    SCRIPT_EXISTS="true"
+else
+    SCRIPT_EXISTS="false"
+fi
 
 if [ "$SCRIPT_EXISTS" != "true" ]; then
     echo -e "${YELLOW}⚠ WARNING: invoke_monitoring_function.sh not found (needed for challenge 4)${NC}"
