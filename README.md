@@ -1,33 +1,122 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-# gcp-ctf-workshop
+# GCP AI Security Lab
 
-> [!WARNING]
-> This CTF setup will create a misconfigured GCP project that is vulnerable to the internet.
-> Don't spin this up in a production environment.
+> [!WARNING]  
+> **This creates intentionally vulnerable infrastructure for educational purposes.**  
+> Never deploy this in a production environment or shared GCP project.
 
-This repository contains the code used to set up the infrastructure for a Google Cloud CTF workshop focused on cloud security vulnerabilities
+A hands-on Google Cloud Platform (GCP) security workshop featuring 3 progressive Capture The Flag (CTF) challenges. Learn cloud exploitation techniques by attacking intentionally misconfigured GCP infrastructure.
 
-You can use this setup if you want to experiment with the challenges in your own GCP project.
+## 🎯 Challenge Overview
 
-The information that participants will need and hints for each challenge are in this repository and also in the presentation marked: `BSidesNYC2024.pdf`
+### Module 1: Cloud Storage Enumeration & Discovery
+- **Target**: Find leaked GPT-5 benchmark results
+- **Skills**: Bucket enumeration, service account privilege escalation
+- **Techniques**: Predictable naming patterns, credential discovery
 
+### Module 2: Metadata Service Exploitation  
+- **Target**: Compromise compute instances via metadata endpoints
+- **Skills**: SSH key extraction, terraform state file analysis
+- **Techniques**: IMDS attacks, infrastructure as code vulnerabilities
 
-## Setting up the challenge
+### Module 3: Cloud Function & IAM Exploitation
+- **Target**: Escalate through cloud functions and service accounts
+- **Skills**: Function enumeration, IAM policy exploitation  
+- **Techniques**: Serverless security, privilege escalation chains
 
-The `challenge-setup.sh` script takes care of the setup.
-It uses terraform to create the cloud resources.
-It also sets up further configurations such as uploading files and configuring resources.
-It generates some credential files used in the challenge such as ssh keys or service account keys. These files are added to the .gitignore file so that they don't get checked in.
+## 🚀 Quick Start
 
-To successfully run the script, you need the following prerequisites:
-- a google cloud account, and the `Owner` role on a google cloud project, so you will have all permissions needed to create the challenge resources
-- terraform
-- gcloud and gsutil
+### Prerequisites
+- GCP account with **Owner** permissions on a dedicated project
+- `terraform` (>= 1.0)
+- `gcloud` CLI configured
+- `gsutil` available
 
-To set up the challenge run the `./challenge-setup.sh` script. Creating the terraform resources will take a few minutes.
+### Setup
+```bash
+# Deploy all infrastructure
+./challenge-setup.sh
 
-## Cleaning up
+# Individual module setup (optional)
+./mod1-setup.sh  # Module 1 only
+./mod2-setup.sh  # Module 2 only
+```
 
-To remove the resources created in your cloud project run the `challenge-destroy.sh` script.
-It runs terraform destroy, and it cleans up the credential files we created. 
+### Validation
+```bash
+# Verify module deployments
+./validate-m1.sh
+./validate-m2.sh  
+./validate-m3.sh
+```
+
+### Cleanup
+```bash
+# Destroy all resources and cleanup credentials
+./challenge-destroy.sh
+```
+
+## 📁 Repository Structure
+
+```
+├── terraform/              # Main infrastructure (modules 2-3)
+├── terraform_module1/      # Module 1 infrastructure  
+├── terraform_module2/      # Module 2 infrastructure
+├── hints/                  # Challenge hints and guidance
+├── docs/                   # Implementation documentation
+├── tests/                  # Automated validation tests
+└── temporary_files/        # Generated credentials (gitignored)
+```
+
+## 🏗️ Infrastructure Components
+
+### GCP Resources Created
+- **Cloud Storage**: Multiple buckets with varying access controls
+- **Compute Engine**: VMs with metadata service vulnerabilities
+- **Cloud Functions**: Python functions with exploitable endpoints
+- **IAM**: Service accounts with intentional misconfigurations
+- **CloudAI Portal**: Web interface for advanced challenges
+
+### Security Vulnerabilities Demonstrated
+- Predictable resource naming patterns
+- Overprivileged service accounts
+- Exposed metadata endpoints
+- Terraform state exposure
+- Insecure cloud function configurations
+
+## 🎮 Playing the Challenges
+
+1. **Start with hints**: Check `hints/module1.md`, `hints/module2.md`, etc.
+2. **Use provided tooling**: Validation scripts help verify progress
+3. **Follow the progression**: Each module builds on previous concepts
+4. **Check solutions**: Full walkthroughs available in `solution.md`
+
+## 📚 Learning Objectives
+
+- Cloud storage security best practices
+- GCP IAM and service account security
+- Metadata service attack vectors
+- Infrastructure as Code (IaC) security
+- Cloud function security considerations
+- Progressive privilege escalation techniques
+
+## ⚠️ Security Warnings
+
+- **Educational use only** - contains intentional vulnerabilities
+- Requires dedicated GCP project with Owner permissions  
+- All credentials stored in `temporary_files/` (auto-gitignored)
+- Always run cleanup script after workshop completion
+- Do not use in shared or production environments
+
+## 🤝 Contributing
+
+This workshop is designed for security education. When contributing:
+- Test full setup/teardown cycles
+- Update hints and solutions for new challenges  
+- Ensure all resources are properly tagged for cleanup
+- Follow existing terraform patterns and naming conventions
+
+## 📄 License
+
+Licensed under GPL v3. See `LICENSE.md` for details. 
