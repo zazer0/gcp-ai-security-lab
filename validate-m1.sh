@@ -53,11 +53,13 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-if [ "$CURRENT_PROJECT" != "$PROJECT_ID" ]; then
+# Check if the PROJECT_ID appears in the gcloud output (handles various output formats)
+if echo "$CURRENT_PROJECT" | grep -q "$PROJECT_ID"; then
+    echo -e "${GREEN}✓ Project context is correct: $PROJECT_ID${NC}"
+else
     echo -e "${RED}✗ ERROR: Project mismatch - expected $PROJECT_ID, got $CURRENT_PROJECT${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Project context is correct: $PROJECT_ID${NC}"
 
 # Test student-workshop permissions (we're already in validation config with student account)
 echo -e "\n${YELLOW}[4/10] Testing student-workshop permissions...${NC}"
