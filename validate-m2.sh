@@ -29,57 +29,39 @@ for tool in gcloud gsutil jq ssh base64; do
 done
 echo -e "${GREEN}✓ All required tools are installed${NC}"
 
-# Save original gcloud configuration
-echo -e "\n${YELLOW}[2/8] Validating student-workshop configuration...${NC}"
+# Check we're using validation configuration
+echo -e "\n${YELLOW}[2/8] Checking gcloud configuration...${NC}"
 
-# Save current configuration details
-ORIGINAL_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
-ORIGINAL_ACCOUNT=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)")
-ORIGINAL_PROJECT=$(gcloud config get-value project)
-
-# Set up trap to restore original configuration on exit
-restore_config() {
-    if [ -n "$ORIGINAL_CONFIG" ]; then
-        gcloud config configurations activate "$ORIGINAL_CONFIG"
-        if [ $? -ne 0 ]; then
-            echo "Warning: Failed to restore config, but continuing"
-        fi
-    fi
-}
-trap "restore_config; rm -rf $TEMP_DIR" EXIT
-
-echo -e "${GREEN}✓ Saved original gcloud configuration: $ORIGINAL_CONFIG${NC}"
-
-# Check that student-workshop configuration exists
-gcloud config configurations list --format="value(name)" | grep -q "^student-workshop$"
-if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ ERROR: student-workshop configuration does not exist${NC}"
-    echo "Please create it with: gcloud config configurations create student-workshop"
-    echo "Then activate the student-workshop service account"
+CURRENT_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
+if [ "$CURRENT_CONFIG" != "validation" ]; then
+    echo -e "${RED}✗ ERROR: Not using validation configuration${NC}"
+    echo "Current config: $CURRENT_CONFIG"
+    echo "Please run: gcloud config configurations activate validation"
     exit 1
 fi
-echo -e "${GREEN}✓ student-workshop configuration exists${NC}"
+echo -e "${GREEN}✓ Using validation configuration${NC}"
+
+# Create temporary directory
+TEMP_DIR=$(mktemp -d)
+trap "rm -rf $TEMP_DIR" EXIT
+echo -e "${GREEN}✓ Created temporary directory: $TEMP_DIR${NC}"
 
 # Test student-workshop account restrictions
 echo -e "\n${YELLOW}[3/8] Testing student-workshop permissions...${NC}"
 
-# Switch to student-workshop configuration
-gcloud config configurations activate student-workshop
-if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ ERROR: Failed to activate student-workshop configuration${NC}"
-    exit 1
-fi
+# Get current service account
+STUDENT_ACCOUNT="student-workshop@$PROJECT_ID.iam.gserviceaccount.com"
 
 # Test 1: Verify student-workshop CANNOT access file-uploads bucket
 BUCKET_NAME="gs://file-uploads-$PROJECT_ID"
-if gsutil ls "$BUCKET_NAME" 2>&1 | grep -q "AccessDeniedException\|403"; then
+if gsutil -i "$STUDENT_ACCOUNT" ls "$BUCKET_NAME" 2>&1 | grep -q "AccessDeniedException\|403"; then
     echo -e "${GREEN}✓ student-workshop correctly denied access to $BUCKET_NAME${NC}"
-elif gsutil ls "$BUCKET_NAME"; then
+elif gsutil -i "$STUDENT_ACCOUNT" ls "$BUCKET_NAME"; then
     echo -e "${RED}✗ ERROR: student-workshop has access to $BUCKET_NAME (should be denied)${NC}"
     exit 1
 else
     # Check if it's a different error (e.g., bucket doesn't exist)
-    ERROR_MSG=$(gsutil ls "$BUCKET_NAME" 2>&1)
+    ERROR_MSG=$(gsutil -i "$STUDENT_ACCOUNT" ls "$BUCKET_NAME" 2>&1)
     if echo "$ERROR_MSG" | grep -q "BucketNotFoundException\|404"; then
         echo -e "${YELLOW}⚠ WARNING: Bucket $BUCKET_NAME not found - may need to run setup first${NC}"
     else
@@ -87,34 +69,17 @@ else
     fi
 fi
 
-# Test 2: Verify student-workshop CANNOT list compute instances
-if gcloud compute instances list --project="$PROJECT_ID" 2>&1 | grep -q "Required 'compute.instances.list' permission\|403\|Permission\|does not have compute.instances.list"; then
+# Test 2: Verify student-workshop CANNOT list compute instances  
+if gcloud compute instances list --impersonate-service-account="$STUDENT_ACCOUNT" --project="$PROJECT_ID" 2>&1 | grep -q "Required 'compute.instances.list' permission\|403\|Permission\|does not have compute.instances.list"; then
     echo -e "${GREEN}✓ student-workshop correctly denied compute instance listing${NC}"
-elif gcloud compute instances list --project="$PROJECT_ID"; then
+elif gcloud compute instances list --impersonate-service-account="$STUDENT_ACCOUNT" --project="$PROJECT_ID"; then
     echo -e "${RED}✗ ERROR: student-workshop can list compute instances (should be denied)${NC}"
     exit 1
 else
     echo -e "${GREEN}✓ student-workshop correctly denied compute instance listing${NC}"
 fi
 
-# Switch to admin-backup for remaining tests
-echo -e "${GREEN}✓ Switching to admin-backup configuration for remaining tests${NC}"
-gcloud config configurations activate admin-backup
-if [ $? -ne 0 ]; then
-    echo -e "${YELLOW}⚠ WARNING: admin-backup configuration not found, using original: $ORIGINAL_CONFIG${NC}"
-    gcloud config configurations activate "$ORIGINAL_CONFIG"
-    if [ $? -ne 0 ]; then
-        echo "Warning: Failed to restore config, but continuing"
-    fi
-fi
-
-# Create temporary directory
-TEMP_DIR=$(mktemp -d)
-# Update trap to include restore_config
-trap "restore_config; rm -rf $TEMP_DIR" EXIT
-echo -e "${GREEN}✓ Created temporary directory: $TEMP_DIR${NC}"
-
-# Check bucket exists and download state file
+# Check bucket exists and download state file (using current account)
 echo -e "\n${YELLOW}[4/8] Validating storage bucket and state file...${NC}"
 
 BUCKET_NAME="gs://file-uploads-$PROJECT_ID"

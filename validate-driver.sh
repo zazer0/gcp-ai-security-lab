@@ -6,7 +6,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "=========================================="
-echo "Module 1 Validation Driver Script"
+echo "Module 1 & 2 Validation Driver Script"
 echo "=========================================="
 
 # Check PROJECT_ID is set
@@ -94,8 +94,25 @@ VALIDATION_EXIT_CODE=$?
 
 echo "=========================================="
 
+# Step 4b: Run Module 2 validation
+echo -e "\n${YELLOW}[4b/8] Running Module 2 validation tests...${NC}"
+echo "=========================================="
+
+# Run validate-m2.sh and capture exit code
+./validate-m2.sh
+MODULE2_EXIT_CODE=$?
+
+echo "=========================================="
+
+# Combine exit codes (fail if either failed)
+if [ $VALIDATION_EXIT_CODE -ne 0 ] || [ $MODULE2_EXIT_CODE -ne 0 ]; then
+    COMBINED_EXIT_CODE=1
+else
+    COMBINED_EXIT_CODE=0
+fi
+
 # Step 5: Restore original configuration
-echo -e "\n${YELLOW}[5/6] Restoring original configuration...${NC}"
+echo -e "\n${YELLOW}[5/8] Restoring original configuration...${NC}"
 RESTORE_OUTPUT=$(gcloud config configurations activate student-workshop 2>&1)
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠ Warning: Failed to restore student-workshop: $RESTORE_OUTPUT${NC}"
@@ -106,7 +123,7 @@ else
 fi
 
 # Step 6: Clean up validation configuration
-echo -e "\n${YELLOW}[6/7] Cleaning up validation configuration...${NC}"
+echo -e "\n${YELLOW}[6/8] Cleaning up validation configuration...${NC}"
 DELETE_OUTPUT=$(gcloud config configurations delete validation --quiet 2>&1)
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠ Warning: Failed to delete validation config: $DELETE_OUTPUT${NC}"
@@ -117,7 +134,7 @@ else
 fi
 
 # Step 7: Clean up bucket-service-account.json if it exists
-echo -e "\n${YELLOW}[7/7] Cleaning up bucket-service-account.json file...${NC}"
+echo -e "\n${YELLOW}[7/8] Cleaning up bucket-service-account.json file...${NC}"
 if [ -f "./bucket-service-account.json" ]; then
     rm -f ./bucket-service-account.json
     if [ $? -eq 0 ]; then
@@ -131,15 +148,27 @@ else
     echo -e "${YELLOW}ℹ No bucket-service-account.json file found to clean up${NC}"
 fi
 
-# Exit with same code as validation script
-if [ $VALIDATION_EXIT_CODE -eq 0 ]; then
+# Exit with combined code from both validation scripts
+if [ ${COMBINED_EXIT_CODE:-$VALIDATION_EXIT_CODE} -eq 0 ]; then
     echo -e "\n${GREEN}=========================================="
-    echo "✓ Validation completed successfully!"
+    echo "✓ All validations completed successfully!"
+    echo "  - Module 1: PASSED"
+    echo "  - Module 2: PASSED"
     echo "==========================================${NC}"
 else
     echo -e "\n${RED}=========================================="
-    echo "✗ Validation failed with exit code: $VALIDATION_EXIT_CODE"
+    echo "✗ Validation failed"
+    if [ $VALIDATION_EXIT_CODE -ne 0 ] && [ ${MODULE2_EXIT_CODE:-0} -ne 0 ]; then
+        echo "  - Module 1: FAILED"
+        echo "  - Module 2: FAILED"
+    elif [ $VALIDATION_EXIT_CODE -ne 0 ]; then
+        echo "  - Module 1: FAILED"
+        echo "  - Module 2: PASSED"
+    else
+        echo "  - Module 1: PASSED"
+        echo "  - Module 2: FAILED"
+    fi
     echo "==========================================${NC}"
 fi
 
-exit $VALIDATION_EXIT_CODE
+exit ${COMBINED_EXIT_CODE:-$VALIDATION_EXIT_CODE}
