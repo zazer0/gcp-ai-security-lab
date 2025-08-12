@@ -106,7 +106,7 @@ else
 fi
 
 # Step 6: Clean up validation configuration
-echo -e "\n${YELLOW}[6/6] Cleaning up validation configuration...${NC}"
+echo -e "\n${YELLOW}[6/7] Cleaning up validation configuration...${NC}"
 DELETE_OUTPUT=$(gcloud config configurations delete validation --quiet 2>&1)
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠ Warning: Failed to delete validation config: $DELETE_OUTPUT${NC}"
@@ -114,6 +114,21 @@ if [ $? -ne 0 ]; then
     echo "  gcloud config configurations delete validation"
 else
     echo -e "${GREEN}✓ Deleted validation configuration${NC}"
+fi
+
+# Step 7: Clean up bucket-service-account.json if it exists
+echo -e "\n${YELLOW}[7/7] Cleaning up bucket-service-account.json file...${NC}"
+if [ -f "./bucket-service-account.json" ]; then
+    rm -f ./bucket-service-account.json
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Deleted bucket-service-account.json file${NC}"
+    else
+        echo -e "${YELLOW}⚠ Warning: Failed to delete bucket-service-account.json${NC}"
+        echo "  You may need to manually delete it:"
+        echo "  rm ./bucket-service-account.json"
+    fi
+else
+    echo -e "${YELLOW}ℹ No bucket-service-account.json file found to clean up${NC}"
 fi
 
 # Exit with same code as validation script
