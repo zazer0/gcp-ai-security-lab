@@ -47,9 +47,9 @@ exec_on_vm() {
     
     output=$(gcloud compute ssh "$vm_name" \
         --zone="$zone" \
-        --command="$cmd" \
-        --quiet \
-        2>"$stderr_file")
+        --command="$cmd" 2>"$stderr_file"
+    )
+        
     exit_code=$?
     
     # Only show stderr on error or if output is unexpected
@@ -86,20 +86,18 @@ else
 fi
 
 # Check for required commands
-command -v gcloud
-if [ $? -ne 0 ]; then
+if command -v gcloud >/dev/null; then
+    print_pass "gcloud is available"
+else
     print_fail "gcloud command not found"
     exit 1
-else
-    print_pass "gcloud is available"
 fi
 
-command -v gsutil
-if [ $? -ne 0 ]; then
+if command -v gsutil >/dev/null; then
+    print_pass "gsutil is available"
+else
     print_fail "gsutil command not found"
     exit 1
-else
-    print_pass "gsutil is available"
 fi
 
 # Save original gcloud configuration
@@ -126,12 +124,12 @@ trap 'trap_restore' EXIT
 print_step "Verifying student-workshop configuration restrictions..."
 
 # Check that student-workshop configuration exists
-if ! gcloud config configurations list --format='value(name)' | grep -q '^student-workshop$'; then
+if gcloud config configurations list --format='value(name)' | grep -q '^student-workshop$'; then
+    print_pass "student-workshop configuration exists"
+else
     print_fail "student-workshop configuration does not exist"
     echo "Please create the student-workshop configuration first"
     exit 1
-else
-    print_pass "student-workshop configuration exists"
 fi
 
 # Switch to student-workshop for testing
@@ -186,16 +184,23 @@ rm -f "$ADMIN_SWITCH_STDERR"
 
 # Verify we're now using admin-backup
 ACCOUNT_STDERR=$(mktemp)
-CURRENT_ACCOUNT=$(gcloud config get-value account 2>"$ACCOUNT_STDERR")
+CURRENT_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
 if [ $? -ne 0 ]; then
-    print_info "Could not get current account"
+    print_info "Could not get current configuration"
     cat "$ACCOUNT_STDERR" >&2
 fi
 rm -f "$ACCOUNT_STDERR"
-if echo "$CURRENT_ACCOUNT" | grep -q "admin"; then
-    print_pass "Successfully switched to admin account: $CURRENT_ACCOUNT"
+if [ "$CURRENT_CONFIG" = "admin-backup" ]; then
+    ACCOUNT_STDERR=$(mktemp)
+    CURRENT_ACCOUNT=$(gcloud config get-value account 2>"$ACCOUNT_STDERR")
+    if [ $? -ne 0 ] && [ -s "$ACCOUNT_STDERR" ]; then
+        print_info "Could not get current account:"
+        cat "$ACCOUNT_STDERR" >&2
+    fi
+    rm -f "$ACCOUNT_STDERR"
+    print_pass "Successfully switched to admin-backup configuration, account: $CURRENT_ACCOUNT"
 else
-    print_fail "Failed to switch to admin account, current: $CURRENT_ACCOUNT"
+    print_fail "Failed to switch to admin-backup configuration, current: $CURRENT_CONFIG"
     exit 1
 fi
 
@@ -235,7 +240,7 @@ fi
 print_step "Checking VM service account..."
 
 VM_SA_STDERR=$(mktemp)
-VM_SERVICE_ACCOUNT=$(exec_on_vm "gcloud auth list --filter=status:ACTIVE --format='value(account)' 2>'$VM_SA_STDERR' | head -1")
+VM_SERVICE_ACCOUNT=$(exec_on_vm "gcloud auth list --filter=status:ACTIVE --format='value(account)' | head -1")
 if [ -s "$VM_SA_STDERR" ]; then
     print_info "Service account retrieval stderr:"
     cat "$VM_SA_STDERR"
@@ -332,7 +337,7 @@ fi
 print_step "Testing storage bucket access from VM..."
 
 BUCKET_STDERR=$(mktemp)
-BUCKET_OUTPUT=$(exec_on_vm "gsutil ls 2>'$BUCKET_STDERR'")
+BUCKET_OUTPUT=$(exec_on_vm "gsutil ls")
 if [ -s "$BUCKET_STDERR" ]; then
     print_info "Bucket listing stderr (may contain warnings):"
     cat "$BUCKET_STDERR"
@@ -351,7 +356,7 @@ fi
 print_step "Checking function source code access..."
 
 SOURCE_STDERR=$(mktemp)
-SOURCE_OUTPUT=$(exec_on_vm "gsutil ls gs://cloud-function-bucket-module3-$PROJECT_ID/ 2>'$SOURCE_STDERR'")
+SOURCE_OUTPUT=$(exec_on_vm "gsutil ls gs://cloud-function-bucket-module3-$PROJECT_ID/")
 if [ -s "$SOURCE_STDERR" ]; then
     print_info "Source listing stderr:"
     cat "$SOURCE_STDERR"
@@ -363,7 +368,7 @@ if echo "$SOURCE_OUTPUT" | grep -q "main.py"; then
     
     # Check if we can read the source file
     LS_L_STDERR=$(mktemp)
-    LS_L_OUTPUT=$(exec_on_vm "gsutil ls -L gs://cloud-function-bucket-module3-$PROJECT_ID/main.py 2>'$LS_L_STDERR'")
+    LS_L_OUTPUT=$(exec_on_vm "gsutil ls -L gs://cloud-function-bucket-module3-$PROJECT_ID/main.py")
     if [ -s "$LS_L_STDERR" ]; then
         print_info "Source file detail stderr:"
         cat "$LS_L_STDERR"
@@ -386,7 +391,7 @@ print_step "Reading and validating function source code..."
 if echo "$SOURCE_OUTPUT" | grep -q "main.py"; then
     print_info "Attempting to read main.py from bucket..."
     CAT_STDERR=$(mktemp)
-    SOURCE_CODE=$(exec_on_vm "gsutil cat gs://cloud-function-bucket-module3-$PROJECT_ID/main.py 2>'$CAT_STDERR'")
+    SOURCE_CODE=$(exec_on_vm "gsutil cat gs://cloud-function-bucket-module3-$PROJECT_ID/main.py")
     if [ -s "$CAT_STDERR" ]; then
         print_info "Source code read stderr:"
         cat "$CAT_STDERR"
@@ -433,16 +438,21 @@ print_step "Checking function invocation script..."
 # First, check if the local script exists
 if [ -f "./invoke_monitoring_function.sh" ]; then
     print_info "Copying latest invocation script to VM..."
-    if gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=$ZONE --quiet 2>&1 | grep -q "ERROR"; then
+    SCP_STDERR=$(mktemp)
+    gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=$ZONE 2>"$SCP_STDERR"
+    SCP_EXIT=$?
+    if [ $SCP_EXIT -ne 0 ]; then
         print_fail "Failed to copy invocation script to VM"
+        cat "$SCP_STDERR" >&2
     else
         print_pass "Successfully copied invocation script to VM"
     fi
+    rm -f "$SCP_STDERR"
 else
     print_info "No local invoke_monitoring_function.sh found to copy"
 fi
 
-if exec_on_vm "test -f ./invoke_monitoring_function.sh && echo 'exists'" | grep -q "exists"; then
+if exec_on_vm "test -f ./invoke_monitoring_function.sh"; then
     print_pass "Invocation script found on VM"
     
     # Test the script
@@ -516,8 +526,7 @@ if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
     
     # If the first method didn't work and jq is available, try using jq for more robust parsing
     if [ -z "$EXTRACTED_TOKEN" ]; then
-        command -v jq
-        if [ $? -eq 0 ]; then
+        if command -v jq >/dev/null; then
             print_info "Attempting JSON parsing with jq..."
             JQ_STDERR=$(mktemp)
             EXTRACTED_TOKEN=$(echo "$SSRF_RESPONSE" | jq -r '.function_account' 2>"$JQ_STDERR" | jq -r '.access_token' 2>>"$JQ_STDERR")
@@ -534,7 +543,7 @@ if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
         
         # Check the extracted token's scopes
         TOKEN_STDERR=$(mktemp)
-        TOKEN_INFO=$(exec_on_vm "curl -s \"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${EXTRACTED_TOKEN}\" 2>'$TOKEN_STDERR'")
+        TOKEN_INFO=$(exec_on_vm "curl -s \"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${EXTRACTED_TOKEN}\"")
         if [ -s "$TOKEN_STDERR" ]; then
             print_info "Token info stderr:"
             cat "$TOKEN_STDERR"
