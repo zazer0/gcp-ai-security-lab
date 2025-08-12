@@ -64,6 +64,7 @@ fi
 # Test student-workshop permissions (we're already in validation config with student account)
 echo -e "\n${YELLOW}[4/10] Testing student-workshop permissions...${NC}"
 
+
 # Test that student-workshop CAN access modeldata-dev bucket
 echo -e "  Testing modeldata-dev access..."
 DEV_ACCESS_OUTPUT=$(gsutil ls "gs://modeldata-dev-$PROJECT_ID" 2>&1)
@@ -128,13 +129,13 @@ else
     exit 1
 fi
 
-# Test 2: Check prod bucket exists
+# Test 2: Check prod bucket is not accessible (as student)
 echo -e "\n${YELLOW}[7/10] Checking modeldata-prod bucket...${NC}"
 PROD_BUCKET_CHECK=$(gsutil ls "gs://modeldata-prod-$PROJECT_ID" 2>&1)
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ modeldata-prod bucket exists${NC}"
+if [ $? -eq 1 ]; then
+    echo -e "${GREEN}✓ modeldata-prod bucket not accessible!${NC}"
 else
-    echo -e "${RED}✗ modeldata-prod bucket not found: $PROD_BUCKET_CHECK${NC}"
+    echo -e "${RED}✗ modeldata-prod bucket was accessible to student?!: $PROD_BUCKET_CHECK${NC}"
     exit 1
 fi
 
