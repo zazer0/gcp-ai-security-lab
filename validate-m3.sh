@@ -34,32 +34,31 @@ print_info() {
     echo -e "${YELLOW}[INFO]${NC} $1"
 }
 
-# Function to execute commands on the VM
+# Function to execute commands on the VM using SSH key from Module 2
 exec_on_vm() {
     local cmd="$1"
-    local vm_name="app-prod-instance-module2"
-    local zone="${ZONE:-us-east1-b}"
-    local stderr_file=$(mktemp)
+    local val_test_dir="./val-test"
+    local ssh_key_file="$val_test_dir/ssh_key"
+    local vm_ip_file="$val_test_dir/vm_ip.txt"
     
-    # Execute command with stderr going to temp file
-    local output
-    local exit_code
-    
-    output=$(gcloud compute ssh "$vm_name" \
-        --zone="$zone" \
-        --command="$cmd" 2>"$stderr_file"
-    )
-        
-    exit_code=$?
-    
-    # Only show stderr on error or if output is unexpected
-    if [ $exit_code -ne 0 ]; then
-        cat "$stderr_file" >&2
+    # Check if required files exist
+    if [ ! -f "$ssh_key_file" ]; then
+        echo "ERROR: SSH key not found at $ssh_key_file" >&2
+        echo "Please run validate-m2.sh first" >&2
+        return 1
     fi
     
-    rm -f "$stderr_file"
-    echo "$output"
-    return $exit_code
+    if [ ! -f "$vm_ip_file" ]; then
+        echo "ERROR: VM IP file not found at $vm_ip_file" >&2
+        echo "Please run validate-m2.sh first" >&2
+        return 1
+    fi
+    
+    local vm_ip=$(cat "$vm_ip_file")
+    
+    # Execute command via SSH
+    ssh -i "$ssh_key_file" -o StrictHostKeyChecking=no -o ConnectTimeout=10 "alice@$vm_ip" "$cmd"
+    return $?
 }
 
 echo "====================================="
@@ -100,131 +99,59 @@ else
     exit 1
 fi
 
-# Save original gcloud configuration
-ORIGINAL_CONFIG_STDERR=$(mktemp)
-ORIGINAL_CONFIG=$(gcloud config get-value account 2>"$ORIGINAL_CONFIG_STDERR")
-if [ $? -ne 0 ]; then
-    print_info "Could not get original gcloud account config"
-    cat "$ORIGINAL_CONFIG_STDERR" >&2
-fi
-rm -f "$ORIGINAL_CONFIG_STDERR"
-
-# Set up trap to restore original config on exit
-trap_restore() {
-    local stderr_file=$(mktemp)
-    gcloud config set account "$ORIGINAL_CONFIG" 2>"$stderr_file"
-    if [ $? -ne 0 ]; then
-        cat "$stderr_file" >&2
-    fi
-    rm -f "$stderr_file"
-}
-trap 'trap_restore' EXIT
-
-# Verify student-workshop configuration restrictions
-print_step "Verifying student-workshop configuration restrictions..."
-
-# Check that student-workshop configuration exists
-if gcloud config configurations list --format='value(name)' | grep -q '^student-workshop$'; then
-    print_pass "student-workshop configuration exists"
-else
-    print_fail "student-workshop configuration does not exist"
-    echo "Please create the student-workshop configuration first"
+# Check that validation test directory exists
+VAL_TEST_DIR="./val-test"
+if [ ! -d "$VAL_TEST_DIR" ]; then
+    print_fail "Validation test directory $VAL_TEST_DIR does not exist"
+    echo "Please run validate-m2.sh first to create the required files"
     exit 1
 fi
 
-# Switch to student-workshop for testing
-print_info "Switching to student-workshop configuration for permission tests..."
-SWITCH_STDERR=$(mktemp)
-gcloud config configurations activate student-workshop 2>"$SWITCH_STDERR"
-if [ $? -ne 0 ]; then
-    print_info "Could not switch to student-workshop configuration"
-    cat "$SWITCH_STDERR" >&2
-fi
-rm -f "$SWITCH_STDERR"
+# Verify student-workshop permissions (using current validation config)
+print_step "Verifying permission restrictions..."
 
-# Test 1: Verify student-workshop CANNOT access cloud-function-bucket-module3
-print_info "Testing student-workshop bucket access restrictions..."
+# Test 1: Verify CANNOT access cloud-function-bucket-module3 with current permissions
+print_info "Testing bucket access restrictions..."
 GSUTIL_TEST_STDERR=$(mktemp)
 GSUTIL_TEST_STDOUT=$(mktemp)
 gsutil ls "gs://cloud-function-bucket-module3-$PROJECT_ID/" >"$GSUTIL_TEST_STDOUT" 2>"$GSUTIL_TEST_STDERR"
 GSUTIL_TEST_EXIT=$?
 if [ $GSUTIL_TEST_EXIT -eq 0 ]; then
-    print_fail "student-workshop CAN access cloud-function-bucket-module3 (should be denied)"
+    print_fail "Current account CAN access cloud-function-bucket-module3 (should be denied)"
     FAILED=$((FAILED + 1))
 else
-    print_pass "student-workshop correctly denied access to cloud-function-bucket-module3"
+    print_pass "Current account correctly denied access to cloud-function-bucket-module3"
     PASSED=$((PASSED + 1))
 fi
 rm -f "$GSUTIL_TEST_STDOUT" "$GSUTIL_TEST_STDERR"
 
-# Test 2: Verify student-workshop CANNOT list cloud functions
-print_info "Testing student-workshop cloud functions restrictions..."
+# Test 2: Verify CANNOT list cloud functions
+print_info "Testing cloud functions restrictions..."
 FUNCTIONS_TEST_STDERR=$(mktemp)
 FUNCTIONS_TEST_STDOUT=$(mktemp)
 gcloud functions list --region="$LOCATION" >"$FUNCTIONS_TEST_STDOUT" 2>"$FUNCTIONS_TEST_STDERR"
 FUNCTIONS_TEST_EXIT=$?
 if [ $FUNCTIONS_TEST_EXIT -eq 0 ]; then
-    print_fail "student-workshop CAN list cloud functions (should be denied)"
+    print_fail "Current account CAN list cloud functions (should be denied)"
     FAILED=$((FAILED + 1))
 else
-    print_pass "student-workshop correctly denied listing cloud functions"
+    print_pass "Current account correctly denied listing cloud functions"
     PASSED=$((PASSED + 1))
 fi
 rm -f "$FUNCTIONS_TEST_STDOUT" "$FUNCTIONS_TEST_STDERR"
 
-# Switch to admin-backup for remaining tests
-print_info "Switching to admin-backup configuration for remaining tests..."
-ADMIN_SWITCH_STDERR=$(mktemp)
-gcloud config configurations activate admin-backup 2>"$ADMIN_SWITCH_STDERR"
-if [ $? -ne 0 ]; then
-    print_info "Could not switch to admin-backup configuration"
-    cat "$ADMIN_SWITCH_STDERR" >&2
-fi
-rm -f "$ADMIN_SWITCH_STDERR"
-
-# Verify we're now using admin-backup
-ACCOUNT_STDERR=$(mktemp)
-CURRENT_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
-if [ $? -ne 0 ]; then
-    print_info "Could not get current configuration"
-    cat "$ACCOUNT_STDERR" >&2
-fi
-rm -f "$ACCOUNT_STDERR"
-if [ "$CURRENT_CONFIG" = "admin-backup" ]; then
-    ACCOUNT_STDERR=$(mktemp)
-    CURRENT_ACCOUNT=$(gcloud config get-value account 2>"$ACCOUNT_STDERR")
-    if [ $? -ne 0 ] && [ -s "$ACCOUNT_STDERR" ]; then
-        print_info "Could not get current account:"
-        cat "$ACCOUNT_STDERR" >&2
-    fi
-    rm -f "$ACCOUNT_STDERR"
-    print_pass "Successfully switched to admin-backup configuration, account: $CURRENT_ACCOUNT"
-else
-    print_fail "Failed to switch to admin-backup configuration, current: $CURRENT_CONFIG"
-    exit 1
-fi
-
 # Step 2: Test VM connectivity
 print_step "Testing VM connectivity..."
 
-VM_NAME="app-prod-instance-module2"
-ZONE="${ZONE:-us-east1-b}"
-
-# Check if VM exists
-VM_CHECK_STDERR=$(mktemp)
-VM_CHECK_STDOUT=$(mktemp)
-gcloud compute instances describe "$VM_NAME" --zone="$ZONE" >"$VM_CHECK_STDOUT" 2>"$VM_CHECK_STDERR"
-VM_CHECK_EXIT=$?
-if [ $VM_CHECK_EXIT -eq 0 ]; then
-    print_pass "VM $VM_NAME exists in zone $ZONE"
-else
-    print_fail "VM $VM_NAME not found in zone $ZONE"
-    echo "Please ensure the infrastructure is deployed correctly"
-    cat "$VM_CHECK_STDERR" >&2
-    rm -f "$VM_CHECK_STDOUT" "$VM_CHECK_STDERR"
+# Read VM IP from Module 2's output
+VM_IP_FILE="$VAL_TEST_DIR/vm_ip.txt"
+if [ ! -f "$VM_IP_FILE" ]; then
+    print_fail "VM IP file not found at $VM_IP_FILE"
+    echo "Please run validate-m2.sh first"
     exit 1
 fi
-rm -f "$VM_CHECK_STDOUT" "$VM_CHECK_STDERR"
+VM_IP=$(cat "$VM_IP_FILE")
+print_pass "Using VM IP from Module 2: $VM_IP"
 
 # Test SSH connectivity
 print_info "Testing SSH connection to VM..."
@@ -435,23 +362,6 @@ fi
 # Step 10: Check invocation script on VM
 print_step "Checking function invocation script..."
 
-# First, check if the local script exists
-if [ -f "./invoke_monitoring_function.sh" ]; then
-    print_info "Copying latest invocation script to VM..."
-    SCP_STDERR=$(mktemp)
-    gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=$ZONE 2>"$SCP_STDERR"
-    SCP_EXIT=$?
-    if [ $SCP_EXIT -ne 0 ]; then
-        print_fail "Failed to copy invocation script to VM"
-        cat "$SCP_STDERR" >&2
-    else
-        print_pass "Successfully copied invocation script to VM"
-    fi
-    rm -f "$SCP_STDERR"
-else
-    print_info "No local invoke_monitoring_function.sh found to copy"
-fi
-
 if exec_on_vm "test -f ./invoke_monitoring_function.sh"; then
     print_pass "Invocation script found on VM"
     
@@ -470,7 +380,7 @@ if exec_on_vm "test -f ./invoke_monitoring_function.sh"; then
     fi
 else
     print_fail "Invocation script not found on VM"
-    print_info "You may need to copy it: gcloud compute scp ./invoke_monitoring_function.sh app-prod-instance-module2:~/ --zone=us-east1-b"
+    print_info "You may need to copy it using scp with the SSH key from Module 2"
 fi
 
 # Step 11: Test SSRF exploitation
@@ -478,10 +388,25 @@ print_step "Testing SSRF exploitation for privilege escalation..."
 
 print_info "Attempting to extract token via SSRF vulnerability..."
 
-# Get Gen2 function URL dynamically
-FUNCTION_URL=$(gcloud run services describe monitoring-function \
-  --region=$LOCATION \
-  --format='value(status.url)')
+# Get Gen2 function URL - try from VM first, then fallback methods
+print_info "Getting monitoring function URL..."
+
+# Method 1: Check if URL is stored on VM from setup
+FUNCTION_URL=$(exec_on_vm "test -f /home/alice/.function_url && cat /home/alice/.function_url" 2>/dev/null)
+
+if [ -z "$FUNCTION_URL" ]; then
+    # Method 2: Extract from invoke_monitoring_function.sh output
+    print_info "URL file not found on VM, extracting from invocation script output..."
+    INVOKE_OUTPUT=$(exec_on_vm "export LOCATION=$LOCATION PROJECT_ID=$PROJECT_ID && bash ./invoke_monitoring_function.sh 2>&1")
+    FUNCTION_URL=$(echo "$INVOKE_OUTPUT" | grep "^Function URL:" | sed 's/^Function URL: //')
+fi
+
+if [ -z "$FUNCTION_URL" ]; then
+    print_fail "Could not retrieve monitoring function URL from VM"
+    print_info "The function URL should be stored in /home/alice/.function_url during setup"
+    exit 1
+fi
+
 print_info "Using function URL: $FUNCTION_URL"
 
 # Execute the SSRF attack from VM

