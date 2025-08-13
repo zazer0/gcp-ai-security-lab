@@ -1,40 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CloudAI Labs{% endblock %}</title>
+    <title>{% block title %}ClosedAI Labs{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+
 <body>
     <header>
         <div class="container">
-            <h1><a href="/">CloudAI Labs</a></h1>
+            <h1><a href="/">ClosedAI Labs</a></h1>
             <p class="tagline">Next-Generation AI Model Hosting Platform</p>
         </div>
     </header>
-    
+
     <nav>
         <div class="container">
             <a href="/">Home</a>
-            <a href="/docs">Model Downloads</a>
-            <a href="/status">System Status</a>
-            <a href="/monitoring">Monitoring</a>
-            <a href="/admin">Admin</a>
+            <a href="/docs">1 - Model Downloads</a>
+            <a href="/status">2 - System Status</a>
+            <a href="/monitoring">3 - Monitoring</a>
+            <a href="/admin">4 - Admin</a>
         </div>
     </nav>
-    
+
     <main>
         <div class="container">
             {% block content %}{% endblock %}
         </div>
     </main>
-    
+
     <footer>
         <div class="container">
-            <p>&copy; 2024 CloudAI Labs. For authorized users only.</p>
+            <p>&copy; 2024 ClosedAI Labs. For authorized users only.</p>
             <p class="small">Project: {{ project_id }} | Region: {{ region }}</p>
         </div>
     </footer>
 </body>
+
 </html>
