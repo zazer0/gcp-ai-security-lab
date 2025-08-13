@@ -476,12 +476,14 @@ fi
 
 
 # Get project number
-if [ -z "$TF_VAR_project_number" ]; then
-    read -p "Your GCP project number: " PROJECT_NUMBER
+if [ -z "$PROJECT_NUMBER" ]; then
+    PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --quiet 2>&1 | grep -Eo '[0-9]{12}'|head -1)
+    echo "Parsed project number: $PROJECT_NUMBER"
 else
-    PROJECT_NUMBER="$TF_VAR_project_number"
-    echo "Using project numebr from environment: $PROJECT_NUMBER"
+    echo "Detected project number: $PROJECT_NUMBER"
 fi
+
+TF_VAR_project_number="${PROJECT_NUMBER}"
 
 if [ -z "$REGION" ]; then
     REGION="us-east1"
