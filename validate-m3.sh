@@ -362,21 +362,6 @@ fi
 # Step 10: Check invocation script on VM
 print_step "Checking function invocation script..."
 
-# First, check if the local script exists
-if [ -f "./invoke_monitoring_function.sh" ]; then
-    print_info "Copying latest invocation script to VM..."
-    SSH_KEY_FILE="$VAL_TEST_DIR/ssh_key"
-    scp -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no ./invoke_monitoring_function.sh "alice@$VM_IP:~/"
-    SCP_EXIT=$?
-    if [ $SCP_EXIT -ne 0 ]; then
-        print_fail "Failed to copy invocation script to VM"
-    else
-        print_pass "Successfully copied invocation script to VM"
-    fi
-else
-    print_info "No local invoke_monitoring_function.sh found to copy"
-fi
-
 if exec_on_vm "test -f ./invoke_monitoring_function.sh"; then
     print_pass "Invocation script found on VM"
     
