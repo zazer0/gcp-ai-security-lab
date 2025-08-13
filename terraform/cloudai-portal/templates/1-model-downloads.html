@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "0-base.html" %}
 
 {% block title %}CloudAI Labs - Model Downloads{% endblock %}
 
@@ -13,27 +13,28 @@ gsutil cp gs://modeldata-dev-{{ project_id }}/[file] .</pre>
 
 <h2>Model Downloads</h2>
 
-<p>Access CloudAI Labs' cutting-edge AI models. Our development models are freely available for testing and evaluation.</p>
+<p>Access CloudAI Labs' cutting-edge AI models. Our development models are freely available for testing and evaluation.
+</p>
 
 <div class="docs-section">
     <h3>Development Models</h3>
-    
+
     <div class="endpoint">
         <h4>Bucket Path</h4>
         <pre>gs://modeldata-dev-{{ project_id }}/</pre>
     </div>
-    
+
     <p>Use Google Cloud Storage tools to browse and download models:</p>
     <pre>gsutil ls gs://modeldata-dev-{{ project_id }}/</pre>
-    
+
     <p class="note">Explore the bucket contents to discover available models and resources.</p>
 </div>
 
 <div class="docs-section">
     <h3>Production Models</h3>
-    
+
     <p>Production models are restricted and require special access permissions.</p>
-    
+
     <div class="endpoint">
         <h4>Bucket Path (Restricted)</h4>
         <pre>gs://modeldata-prod-{{ project_id }}/</pre>
@@ -42,14 +43,16 @@ gsutil cp gs://modeldata-dev-{{ project_id }}/[file] .</pre>
 
 <div class="docs-section">
     <h3>Getting Started Tips</h3>
-    
+
     <ul>
-        <li>New to Google Cloud Storage? Install the gcloud CLI and authenticate with <code>gcloud auth login</code></li>
+        <li>New to Google Cloud Storage? Install the gcloud CLI and authenticate with <code>gcloud auth login</code>
+        </li>
         <li>Use <code>gsutil help</code> for more commands</li>
     </ul>
 </div>
 
 <div class="notice">
-    <p><strong>Note:</strong> Development models are for testing purposes only. Production deployment requires proper authorization.</p>
+    <p><strong>Note:</strong> Development models are for testing purposes only. Production deployment requires proper
+        authorization.</p>
 </div>
 {% endblock %}

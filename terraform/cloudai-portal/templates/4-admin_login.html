@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "0-base.html" %}
 
 {% block title %}CloudAI Labs - Admin Login{% endblock %}
 
@@ -8,7 +8,7 @@
 <div class="login-box">
     <h3>Access Denied</h3>
     <p>You must provide a valid access token to access the admin console.</p>
-    
+
     <div class="login-info">
         <h4>How to Authenticate:</h4>
         <ol>
@@ -17,7 +17,7 @@
         </ol>
         <pre>Authorization: Bearer ya29.xxxxx...</pre>
     </div>
-    
+
     {% if hint %}
     <div class="hint-box">
         <h4>Hint:</h4>
@@ -25,13 +25,13 @@
         <p>The monitoring function can retrieve access tokens when called with the correct parameters.</p>
     </div>
     {% endif %}
-    
+
     <div class="example-usage">
         <h4>Example using curl:</h4>
         <pre>curl https://{{ request.host }}/admin \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"</pre>
     </div>
-    
+
     <div class="notice">
         <p><strong>Note:</strong> Only service accounts with elevated permissions can access this console.</p>
     </div>

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "0-base.html" %}
 
 {% block title %}CloudAI Labs - System Status{% endblock %}
 
@@ -22,7 +22,7 @@
 
 <div class="deployments">
     <h3>Recent Deployments</h3>
-    
+
     {% for deployment in deployments %}
     <div class="deployment-card">
         <h4>Deployment {{ deployment.id }}</h4>
@@ -40,14 +40,14 @@
                 <td>{{ deployment.deployed_by }}</td>
             </tr>
         </table>
-        
+
         <h5>Deployment Artifacts</h5>
         <div class="artifacts">
             <p><strong>Logs:</strong> <code>{{ deployment.artifacts.logs }}</code></p>
             <p><strong>State File:</strong> <code>{{ deployment.artifacts.state }}</code></p>
             <p><strong>State Backup:</strong> <code>{{ deployment.artifacts.backup }}</code></p>
         </div>
-        
+
         <div class="notice">
             <p>To view deployment details, access the artifacts using gsutil:</p>
             <pre>gsutil cat {{ deployment.artifacts.state }}</pre>
@@ -67,6 +67,7 @@
 </div>
 
 <div class="notice">
-    <p><strong>Note:</strong> Terraform state files contain sensitive infrastructure details including service account keys.</p>
+    <p><strong>Note:</strong> Terraform state files contain sensitive infrastructure details including service account
+        keys.</p>
 </div>
 {% endblock %}

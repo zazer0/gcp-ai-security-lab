@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "0-base.html" %}
 
 {% block title %}CloudAI Labs - Admin Console{% endblock %}
 
@@ -39,7 +39,7 @@
 <div class="admin-section">
     <h3>Permission Tester</h3>
     <p>Test if one service account can impersonate another:</p>
-    
+
     <form id="permission-test" method="POST" action="/admin/test-permissions">
         <div class="form-group">
             <label>Acting Service Account:</label>
@@ -49,7 +49,7 @@
                 {% endfor %}
             </select>
         </div>
-        
+
         <div class="form-group">
             <label>Target Service Account:</label>
             <select name="target">
@@ -58,10 +58,10 @@
                 {% endfor %}
             </select>
         </div>
-        
+
         <button type="submit" class="button">Test Permissions</button>
     </form>
-    
+
     <div id="permission-result" class="result-box" style="display: none;">
         <h4>Permission Test Result</h4>
         <pre id="permission-content"></pre>
@@ -73,48 +73,51 @@
     <div class="iam-info">
         <h4>Key Observations:</h4>
         <ul>
-            <li>The <code>{{ project_id }}-compute</code> service account has <strong>ServiceAccountTokenCreator</strong> role</li>
-            <li>The <code>terraform-pipeline</code> service account has a custom <strong>TerraformPipelineProjectAdmin</strong> role</li>
+            <li>The <code>{{ project_id }}-compute</code> service account has
+                <strong>ServiceAccountTokenCreator</strong> role</li>
+            <li>The <code>terraform-pipeline</code> service account has a custom
+                <strong>TerraformPipelineProjectAdmin</strong> role</li>
             <li>This custom role includes permissions to modify project IAM bindings</li>
             <li>Service account impersonation can be used for privilege escalation</li>
         </ul>
-        
+
         <div class="notice">
-            <p><strong>Security Note:</strong> Service accounts with token creator permissions can impersonate other service accounts they have access to.</p>
+            <p><strong>Security Note:</strong> Service accounts with token creator permissions can impersonate other
+                service accounts they have access to.</p>
         </div>
     </div>
 </div>
 
 <script>
-document.getElementById('permission-test').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const resultDiv = document.getElementById('permission-result');
-    const resultContent = document.getElementById('permission-content');
-    
-    resultDiv.style.display = 'block';
-    resultContent.textContent = 'Testing...';
-    
-    try {
-        const response = await fetch('/admin/test-permissions', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        resultContent.textContent = JSON.stringify(data, null, 2);
-        
-        // Highlight commands
-        if (data.command) {
-            resultContent.innerHTML = resultContent.innerHTML.replace(
-                /(gcloud[^"]+)/g,
-                '<span style="background-color: #e8f5e9; padding: 2px;">$1</span>'
-            );
+    document.getElementById('permission-test').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const resultDiv = document.getElementById('permission-result');
+        const resultContent = document.getElementById('permission-content');
+
+        resultDiv.style.display = 'block';
+        resultContent.textContent = 'Testing...';
+
+        try {
+            const response = await fetch('/admin/test-permissions', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            resultContent.textContent = JSON.stringify(data, null, 2);
+
+            // Highlight commands
+            if (data.command) {
+                resultContent.innerHTML = resultContent.innerHTML.replace(
+                    /(gcloud[^"]+)/g,
+                    '<span style="background-color: #e8f5e9; padding: 2px;">$1</span>'
+                );
+            }
+        } catch (error) {
+            resultContent.textContent = 'Error: ' + error.message;
         }
-    } catch (error) {
-        resultContent.textContent = 'Error: ' + error.message;
-    }
-});
+    });
 </script>
 {% endblock %}

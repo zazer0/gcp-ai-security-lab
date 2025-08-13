@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "0-base.html" %}
 
 {% block title %}CloudAI Labs - Home{% endblock %}
 
@@ -14,13 +14,13 @@
         <p>Deploy your AI models with our scalable infrastructure. Support for all major frameworks.</p>
         <a href="/docs" class="button">View API Documentation</a>
     </div>
-    
+
     <div class="feature">
         <h3>Enterprise Ready</h3>
         <p>Production-grade deployment with automated CI/CD pipelines and comprehensive monitoring.</p>
         <a href="/status" class="button">Check System Status</a>
     </div>
-    
+
     <div class="feature">
         <h3>Real-time Monitoring</h3>
         <p>Track your model performance and system health with our advanced monitoring dashboard.</p>
@@ -38,7 +38,8 @@
 </div>
 
 <div class="notice">
-    <p><strong>Developer Notice:</strong> For development models, use the <code>modeldata-dev-{{ project_id }}</code> bucket.</p>
+    <p><strong>Developer Notice:</strong> For development models, use the <code>modeldata-dev-{{ project_id }}</code>
+        bucket.</p>
     <p>Production deployments are managed through our automated pipeline.</p>
 </div>
 {% endblock %}

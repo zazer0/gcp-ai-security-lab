@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "0-base.html" %}
 
 {% block title %}CloudAI Labs - Monitoring Dashboard{% endblock %}
 
@@ -23,10 +23,10 @@
             </select>
             <p class="help">Select which metadata to retrieve from the monitoring function.</p>
         </div>
-        
+
         <button type="submit" class="button">Check Status</button>
     </form>
-    
+
     <div id="result" class="result-box" style="display: none;">
         <h4>Monitoring Result</h4>
         <pre id="result-content"></pre>
@@ -50,35 +50,35 @@
 </div>
 
 <script>
-document.getElementById('monitoring-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const resultDiv = document.getElementById('result');
-    const resultContent = document.getElementById('result-content');
-    
-    resultDiv.style.display = 'block';
-    resultContent.textContent = 'Loading...';
-    
-    try {
-        const response = await fetch('/monitoring/check', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        resultContent.textContent = JSON.stringify(data, null, 2);
-        
-        // Highlight if token is found
-        if (data.function_account && data.function_account.includes('ya29')) {
-            resultContent.innerHTML = resultContent.innerHTML.replace(
-                /(ya29\.[a-zA-Z0-9\-_]+)/g,
-                '<span style="background-color: yellow;">$1</span>'
-            );
+    document.getElementById('monitoring-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const resultDiv = document.getElementById('result');
+        const resultContent = document.getElementById('result-content');
+
+        resultDiv.style.display = 'block';
+        resultContent.textContent = 'Loading...';
+
+        try {
+            const response = await fetch('/monitoring/check', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            resultContent.textContent = JSON.stringify(data, null, 2);
+
+            // Highlight if token is found
+            if (data.function_account && data.function_account.includes('ya29')) {
+                resultContent.innerHTML = resultContent.innerHTML.replace(
+                    /(ya29\.[a-zA-Z0-9\-_]+)/g,
+                    '<span style="background-color: yellow;">$1</span>'
+                );
+            }
+        } catch (error) {
+            resultContent.textContent = 'Error: ' + error.message;
         }
-    } catch (error) {
-        resultContent.textContent = 'Error: ' + error.message;
-    }
-});
+    });
 </script>
 {% endblock %}

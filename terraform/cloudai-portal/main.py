@@ -38,7 +38,7 @@ def index():
 @app.route('/docs')
 def developer_docs():
     """Module 1 entry point - Model downloads"""
-    return render_template('docs.html', 
+    return render_template('1-model-downloads.html', 
         project_id=PROJECT_ID,
         region=REGION,
         api_endpoint=f'https://{REGION}-{PROJECT_ID}.cloudfunctions.net/cloudai-portal/api/v1/'
@@ -118,7 +118,7 @@ def deployment_status():
 @app.route('/monitoring')
 def monitoring_dashboard():
     """Module 3 entry point - Monitoring dashboard"""
-    return render_template('monitoring.html',
+    return render_template('3-monitoring.html',
         project_id=PROJECT_ID,
         region=REGION
     )
@@ -164,7 +164,7 @@ def admin_console():
     token = auth_header.replace('Bearer ', '') if auth_header else None
     
     if not token:
-        return render_template('admin_login.html',
+        return render_template('4-admin_login.html',
             hint='Use the token obtained from the monitoring function'
         )
     
