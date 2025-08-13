@@ -6,7 +6,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo "=========================================="
-echo "Module 1 & 2 Validation Driver Script"
+echo "Module 1, 2 & 3 Validation Driver Script"
 echo "=========================================="
 
 # Check PROJECT_ID is set
@@ -15,6 +15,12 @@ if [ -z "${PROJECT_ID:-}" ]; then
     echo "Please run: export PROJECT_ID=<your-project-id>"
     exit 1
 fi
+
+# Create shared validation test directory at the start
+echo -e "\n${YELLOW}[0/9] Creating validation test directory...${NC}"
+VAL_TEST_DIR="./val-test"
+mkdir -p "$VAL_TEST_DIR"
+echo -e "${GREEN}✓ Created/using validation test directory: $VAL_TEST_DIR${NC}"
 
 # Step 1: Verify student-workshop config is active
 echo -e "\n${YELLOW}[1/6] Verifying current configuration...${NC}"
@@ -104,15 +110,28 @@ MODULE2_EXIT_CODE=$?
 
 echo "=========================================="
 
-# Combine exit codes (fail if either failed)
-if [ $VALIDATION_EXIT_CODE -ne 0 ] || [ $MODULE2_EXIT_CODE -ne 0 ]; then
+# Step 4c: Run Module 3 validation in validation config
+echo -e "\n${YELLOW}[4c/9] Running Module 3 validation tests...${NC}"
+echo "=========================================="
+
+# Ensure we have LOCATION set for Module 3
+export LOCATION="us-east1"
+
+# Run validate-m3.sh and capture exit code
+./validate-m3.sh
+MODULE3_EXIT_CODE=$?
+
+echo "=========================================="
+
+# Combine exit codes (fail if any failed)
+if [ $VALIDATION_EXIT_CODE -ne 0 ] || [ $MODULE2_EXIT_CODE -ne 0 ] || [ $MODULE3_EXIT_CODE -ne 0 ]; then
     COMBINED_EXIT_CODE=1
 else
     COMBINED_EXIT_CODE=0
 fi
 
 # Step 5: Restore original configuration
-echo -e "\n${YELLOW}[5/8] Restoring original configuration...${NC}"
+echo -e "\n${YELLOW}[5/9] Restoring original configuration...${NC}"
 RESTORE_OUTPUT=$(gcloud config configurations activate student-workshop 2>&1)
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠ Warning: Failed to restore student-workshop: $RESTORE_OUTPUT${NC}"
@@ -123,7 +142,7 @@ else
 fi
 
 # Step 6: Clean up validation configuration
-echo -e "\n${YELLOW}[6/8] Cleaning up validation configuration...${NC}"
+echo -e "\n${YELLOW}[6/9] Cleaning up validation configuration...${NC}"
 DELETE_OUTPUT=$(gcloud config configurations delete validation --quiet 2>&1)
 if [ $? -ne 0 ]; then
     echo -e "${YELLOW}⚠ Warning: Failed to delete validation config: $DELETE_OUTPUT${NC}"
@@ -134,7 +153,7 @@ else
 fi
 
 # Step 7: Clean up bucket-service-account.json if it exists
-echo -e "\n${YELLOW}[7/8] Cleaning up bucket-service-account.json file...${NC}"
+echo -e "\n${YELLOW}[7/9] Cleaning up temporary files...${NC}"
 if [ -f "./bucket-service-account.json" ]; then
     rm -f ./bucket-service-account.json
     if [ $? -eq 0 ]; then
@@ -148,26 +167,54 @@ else
     echo -e "${YELLOW}ℹ No bucket-service-account.json file found to clean up${NC}"
 fi
 
-# Exit with combined code from both validation scripts
+# Step 8: Clean up validation test directory
+echo -e "\n${YELLOW}[8/9] Cleaning up validation test directory...${NC}"
+if [ -d "$VAL_TEST_DIR" ]; then
+    rm -rf "$VAL_TEST_DIR"
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✓ Deleted validation test directory${NC}"
+    else
+        echo -e "${YELLOW}⚠ Warning: Failed to delete validation test directory${NC}"
+        echo "  You may need to manually delete it:"
+        echo "  rm -rf $VAL_TEST_DIR"
+    fi
+else
+    echo -e "${YELLOW}ℹ No validation test directory found to clean up${NC}"
+fi
+
+# Exit with combined code from all validation scripts
 if [ ${COMBINED_EXIT_CODE:-$VALIDATION_EXIT_CODE} -eq 0 ]; then
     echo -e "\n${GREEN}=========================================="
     echo "✓ All validations completed successfully!"
     echo "  - Module 1: PASSED"
     echo "  - Module 2: PASSED"
+    echo "  - Module 3: PASSED"
     echo "==========================================${NC}"
 else
     echo -e "\n${RED}=========================================="
     echo "✗ Validation failed"
-    if [ $VALIDATION_EXIT_CODE -ne 0 ] && [ ${MODULE2_EXIT_CODE:-0} -ne 0 ]; then
+    
+    # Module 1 status
+    if [ $VALIDATION_EXIT_CODE -ne 0 ]; then
         echo "  - Module 1: FAILED"
-        echo "  - Module 2: FAILED"
-    elif [ $VALIDATION_EXIT_CODE -ne 0 ]; then
-        echo "  - Module 1: FAILED"
-        echo "  - Module 2: PASSED"
     else
         echo "  - Module 1: PASSED"
-        echo "  - Module 2: FAILED"
     fi
+    
+    # Module 2 status
+    if [ ${MODULE2_EXIT_CODE:-0} -ne 0 ]; then
+        echo "  - Module 2: FAILED"
+    else
+        echo "  - Module 2: PASSED"
+    fi
+    
+    # Module 3 status
+    if [ ${MODULE3_EXIT_CODE:-0} -ne 0 ]; then
+        echo "  - Module 3: FAILED"
+    else
+        echo "  - Module 3: PASSED"
+    fi
+    
     echo "==========================================${NC}"
 fi
 

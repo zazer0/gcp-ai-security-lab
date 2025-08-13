@@ -41,10 +41,10 @@ if [ "$CURRENT_CONFIG" != "validation" ]; then
 fi
 echo -e "${GREEN}✓ Using validation configuration${NC}"
 
-# Create temporary directory
-TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
-echo -e "${GREEN}✓ Created temporary directory: $TEMP_DIR${NC}"
+# Create shared validation test directory
+VAL_TEST_DIR="./val-test"
+mkdir -p "$VAL_TEST_DIR"
+echo -e "${GREEN}✓ Created/using validation test directory: $VAL_TEST_DIR${NC}"
 
 # Test student-workshop account restrictions
 echo -e "\n${YELLOW}[3/8] Testing student-workshop permissions...${NC}"
@@ -83,7 +83,7 @@ fi
 echo -e "\n${YELLOW}[4/8] Validating storage bucket and state file...${NC}"
 
 BUCKET_NAME="gs://file-uploads-$PROJECT_ID"
-STATE_FILE="$TEMP_DIR/terraform.tfstate"
+STATE_FILE="$VAL_TEST_DIR/terraform.tfstate"
 
 gsutil ls "$BUCKET_NAME"
 if [ $? -ne 0 ]; then
@@ -121,7 +121,7 @@ fi
 echo -e "${GREEN}✓ Found base64-encoded SSH key in state file: \n${SSH_KEY_B64}${NC}"
 
 # Decode SSH key
-SSH_KEY_FILE="$TEMP_DIR/ssh_key"
+SSH_KEY_FILE="$VAL_TEST_DIR/ssh_key"
 echo "$SSH_KEY_B64" | base64 -d > "$SSH_KEY_FILE"
 chmod 600 "$SSH_KEY_FILE"
 echo -e "${GREEN}✓ Decoded SSH key and saved with proper permissions: \n ${SSH_KEY_FILE}${NC}"
@@ -134,6 +134,10 @@ if [ -z "$VM_IP" ] || [ "$VM_IP" == "null" ]; then
     exit 1
 fi
 echo -e "${GREEN}✓ Found VM external IP: $VM_IP${NC}"
+
+# Save VM IP for Module 3
+echo "$VM_IP" > "$VAL_TEST_DIR/vm_ip.txt"
+echo -e "${GREEN}✓ Saved VM IP to $VAL_TEST_DIR/vm_ip.txt for Module 3${NC}"
 
 # Test SSH connectivity
 echo -e "\n${YELLOW}[6/8] Testing SSH connectivity...${NC}"
