@@ -15,21 +15,26 @@ if [ -z "$PROJECT_NUMBER" ]; then
     exit 1
 fi
 
+ANSWER_DIR='./.answerfiles-dontreadpls-spoilers-sadge'
+
 #  create directory for temporary files
-mkdir -p temporary_files
+TEMPFILE_DIR="${ANSWER_DIR}/temporary_files"
+mkdir -p "${TEMPFILE_DIR}"
 if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to create temporary_files directory"
+    echo "ERROR: Failed to create ${TEMPFILE_DIR} directory"
     exit 1
 fi
 
-# Module 1 setup - Create terraform_module1 directory for separate state
+# Module 1 setup - Create ${TFMOD1_DIR} directory for separate state
 echo "##########################################################"
 echo "> Beginning terraform setup for - Module 1."
 echo "##########################################################"
-mkdir -p terraform_module1
-cp terraform/module1.tf terraform_module1/
-cp terraform/variables.tf terraform_module1/
-cp terraform/provider.tf terraform_module1/
+
+TFMOD1_DIR="${ANSWER_DIR}/terraform_module1"
+mkdir -p ${TFMOD1_DIR}
+cp terraform/module1.tf ${TFMOD1_DIR}/
+cp terraform/variables.tf ${TFMOD1_DIR}/
+cp terraform/provider.tf ${TFMOD1_DIR}/
 
 # Force cleanup any orphaned Module 1 service accounts before terraform runs
 # This ensures terraform can create them fresh without conflicts
@@ -89,7 +94,7 @@ echo "  Module 1 service account cleanup complete"
 
 ##### PHASE BETA -> CREATION
 
-cd terraform_module1
+cd ${TFMOD1_DIR}
 terraform init -input=false
 if [ $? -ne 0 ]; then
     echo "ERROR: Terraform init failed for Module 1"
@@ -119,8 +124,8 @@ fi
 # this is done to get an extra state file that we can leak on the storage bucket
 # create it first so that we have the state file, and to give it some time to boot
 # create ssh key for vulnerable compute VM
-if [ ! -f temporary_files/leaked_ssh_key ]; then
-    ssh-keygen -t ed25519 -C "alice" -f temporary_files/leaked_ssh_key -N ''
+if [ ! -f ${TEMPFILE_DIR}/leaked_ssh_key ]; then
+    ssh-keygen -t ed25519 -C "alice" -f ${TEMPFILE_DIR}/leaked_ssh_key -N ''
     if [ $? -ne 0 ]; then
         echo "ERROR: Failed to generate SSH key"
         exit 1
@@ -130,7 +135,11 @@ fi
 echo "##########################################################"
 echo "> Beginning terraform setup for - Module 2."
 echo "##########################################################"
-cd terraform_module2
+
+TFMOD2_DIR="${ANSWER_DIR}/terraform_module2"
+mkdir -p ${TFMOD2_DIR}
+
+cd ${TFMOD2_DIR}
 terraform init -input=false
 if [ $? -ne 0 ]; then
     echo "ERROR: Terraform init failed for Module 2"
@@ -160,7 +169,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Import Module 1 resources that were created in terraform_module1
+# Import Module 1 resources that were created in ${TFMOD1_DIR}
 echo "> Checking for existing Module 1 resources to import..."
 
 # Import student-workshop service account if it exists
@@ -276,25 +285,25 @@ fi
 echo "Function URL: $FUNCTION_URL"
 
 # copy function invocation script on compute engine
-scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no ./invoke_monitoring_function.sh alice@$COMPUTE_IP:/tmp
+scp -i ${TEMPFILE_DIR}/leaked_ssh_key -o StrictHostKeyChecking=no ./invoke_monitoring_function.sh alice@$COMPUTE_IP:/tmp
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to copy invoke_monitoring_function.sh to compute instance"
     exit 1
 fi
 # make the script executable and not writeable and owned by root
-ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo mv /tmp/invoke_monitoring_function.sh /usr/local/bin/; cd /home/alice && ln -s /usr/local/bin/invoke_monitoring_function.sh; sudo chmod 755 /usr/local/bin/invoke_monitoring_function.sh; sudo chown root:root /usr/local/bin/invoke_monitoring_function.sh"
+ssh -i ${TEMPFILE_DIR}/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo mv /tmp/invoke_monitoring_function.sh /usr/local/bin/; cd /home/alice && ln -s /usr/local/bin/invoke_monitoring_function.sh; sudo chmod 755 /usr/local/bin/invoke_monitoring_function.sh; sudo chown root:root /usr/local/bin/invoke_monitoring_function.sh"
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to set up invoke_monitoring_function.sh on compute instance"
     exit 1
 fi
 # Save the function URL to a file on the VM for the invocation script
-ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "echo '$FUNCTION_URL' > /home/alice/.function_url"
+ssh -i ${TEMPFILE_DIR}/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "echo '$FUNCTION_URL' > /home/alice/.function_url"
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to save function URL on compute instance"
     exit 1
 fi
 # drop sudo privileges for alice
-ssh -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo deluser alice google-sudoers"
+ssh -i ${TEMPFILE_DIR}/leaked_ssh_key -o StrictHostKeyChecking=no alice@$COMPUTE_IP "sudo deluser alice google-sudoers"
 if [ $? -ne 0 ]; then
     echo "WARNING: Failed to remove alice from google-sudoers (may not exist)"
 fi
@@ -381,7 +390,7 @@ gcloud config configurations list
 
 # Extract student-workshop service account key from terraform
 echo "> Extracting student-workshop service account credentials..."
-cd terraform_module1
+cd ${TFMOD1_DIR}
 STUDENT_KEY=$(terraform output -raw student_workshop_key 2>/dev/null)
 if [ -z "$STUDENT_KEY" ]; then
     echo "ERROR: Failed to get student-workshop service account key from terraform"
@@ -395,7 +404,7 @@ fi
 cd ..
 
 # Save the key to a file
-echo "$STUDENT_KEY" | base64 -d > temporary_files/student-workshop-key.json
+echo "$STUDENT_KEY" | base64 -d > ${TEMPFILE_DIR}/student-workshop-key.json
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to decode student-workshop service account key"
     exit 1
@@ -420,7 +429,7 @@ fi
 
 # Activate the student-workshop service account
 echo "> Activating student-workshop service account..."
-gcloud auth activate-service-account "$STUDENT_EMAIL" --key-file=temporary_files/student-workshop-key.json
+gcloud auth activate-service-account "$STUDENT_EMAIL" --key-file=${TEMPFILE_DIR}/student-workshop-key.json
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to activate student-workshop service account"
     echo "Check that the key file exists and is valid."
