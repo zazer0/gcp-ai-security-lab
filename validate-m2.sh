@@ -152,7 +152,7 @@ echo -e "${GREEN}✓ Successfully connected via SSH as alice@$VM_IP${NC}"
 # Verify flag exists
 echo -e "\n${YELLOW}[7/8] Verifying challenge components on VM...${NC}"
 
-ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "alice@$VM_IP" "[ -f /home/alice/flag2-part-B.txt ]"
+ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "alice@$VM_IP" "[ -f /home/alice/flag2-partB.txt ]"
 if [ $? -eq 0 ]; then
     FLAG_EXISTS="true"
 else
@@ -160,10 +160,10 @@ else
 fi
 
 if [ "$FLAG_EXISTS" != "true" ]; then
-    echo -e "${RED}✗ ERROR: flag2-part-B.txt not found in alice's home directory${NC}"
+    echo -e "${RED}✗ ERROR: flag2-partB.txt not found in alice's home directory${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ flag2-part-B.txt exists in /home/alice/${NC}"
+echo -e "${GREEN}✓ flag2-partB.txt exists in /home/alice/${NC}"
 
 # Verify VM service account
 SA_EMAIL=$(ssh -i "$SSH_KEY_FILE" -o StrictHostKeyChecking=no "alice@$VM_IP" "gcloud auth list --filter=status:ACTIVE --format='value(account)'")
