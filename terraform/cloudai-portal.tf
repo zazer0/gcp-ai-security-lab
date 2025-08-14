@@ -56,16 +56,6 @@ resource "google_cloudfunctions2_function" "cloudai_portal" {
   }
 }
 
-resource "google_project_organization_policy" "allow_public_access" {
-  project    = var.project_id
-  constraint = "iam.allowedPolicyMemberDomains"
-
-  list_policy {
-    allow {
-      all = true # This allows allUsers and allAuthenticatedUsers
-    }
-  }
-}
 
 # Allow public access to the portal
 resource "google_cloud_run_service_iam_member" "cloudai_portal_public" {
