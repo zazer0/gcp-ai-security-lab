@@ -18,13 +18,19 @@
     <div class="feature">
         <h3>Enterprise Ready</h3>
         <p>Production-grade deployment with automated CI/CD pipelines and comprehensive monitoring.</p>
-        <a href="/status" class="button">Check System Status</a>
+        <a href="/status" class="button" id="status-button">Check System Status</a>
+        <div class="lock-status" id="status-lock" style="display: none;">
+            🔒 Module locked - find the flag to unlock
+        </div>
     </div>
 
     <div class="feature">
         <h3>Real-time Monitoring</h3>
         <p>Track your model performance and system health with our advanced monitoring dashboard.</p>
-        <a href="/monitoring" class="button">Open Monitoring</a>
+        <a href="/monitoring" class="button" id="monitoring-button">Open Monitoring</a>
+        <div class="lock-status" id="monitoring-lock" style="display: none;">
+            🔒 Module locked - find the flag to unlock
+        </div>
     </div>
 </div>
 
@@ -42,4 +48,38 @@
         bucket.</p>
     <p>Production deployments are managed through our automated pipeline.</p>
 </div>
+
+<script>
+// Check module status and show lock indicators
+async function checkModuleStatus() {
+    try {
+        const response = await fetch('/progress');
+        const progress = await response.json();
+        
+        // Handle Status module
+        if (!progress.module2) {
+            document.getElementById('status-button').style.display = 'none';
+            document.getElementById('status-lock').style.display = 'block';
+        } else {
+            document.getElementById('status-button').style.display = 'inline-block';
+            document.getElementById('status-lock').style.display = 'none';
+        }
+        
+        // Handle Monitoring module
+        if (!progress.module3) {
+            document.getElementById('monitoring-button').style.display = 'none';
+            document.getElementById('monitoring-lock').style.display = 'block';
+        } else {
+            document.getElementById('monitoring-button').style.display = 'inline-block';
+            document.getElementById('monitoring-lock').style.display = 'none';
+        }
+        
+    } catch (error) {
+        console.error('Error checking module status:', error);
+    }
+}
+
+// Check status on page load
+document.addEventListener('DOMContentLoaded', checkModuleStatus);
+</script>
 {% endblock %}

@@ -19,10 +19,10 @@
     <nav>
         <div class="container">
             <a href="/">Home</a>
-            <a href="/docs">1 - Model Downloads</a>
-            <a href="/status">2 - System Status</a>
-            <a href="/monitoring">3 - Monitoring</a>
-            <a href="/admin">4 - Admin</a>
+            <a href="/docs" id="nav-module1">1 - Model Downloads <span class="unlock-indicator">✓</span></a>
+            <a href="/status" id="nav-module2">2 - System Status <span class="unlock-indicator" id="lock2">🔒</span></a>
+            <a href="/monitoring" id="nav-module3">3 - Monitoring <span class="unlock-indicator" id="lock3">🔒</span></a>
+            <a href="/admin" id="nav-module4">4 - Admin <span class="unlock-indicator" id="lock4">🔒</span></a>
         </div>
     </nav>
 
@@ -38,6 +38,32 @@
             <p class="small">Project: {{ project_id }} | Region: {{ region }}</p>
         </div>
     </footer>
+
+    <script>
+    // Update navigation lock indicators based on progress
+    async function updateProgress() {
+        try {
+            const response = await fetch('/progress');
+            const progress = await response.json();
+            
+            // Update lock indicators
+            document.getElementById('lock2').textContent = progress.module2 ? '✓' : '🔒';
+            document.getElementById('lock3').textContent = progress.module3 ? '✓' : '🔒';
+            document.getElementById('lock4').textContent = progress.module4 ? '✓' : '🔒';
+            
+            // Update navigation link styles
+            document.getElementById('nav-module2').className = progress.module2 ? '' : 'locked-nav';
+            document.getElementById('nav-module3').className = progress.module3 ? '' : 'locked-nav';
+            document.getElementById('nav-module4').className = progress.module4 ? '' : 'locked-nav';
+            
+        } catch (error) {
+            console.error('Error updating progress:', error);
+        }
+    }
+    
+    // Update progress on page load
+    document.addEventListener('DOMContentLoaded', updateProgress);
+    </script>
 </body>
 
 </html>
