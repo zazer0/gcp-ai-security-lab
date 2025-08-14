@@ -49,8 +49,8 @@
         </div>
 
         <div class="notice">
-            <p>To view deployment details, access the artifacts using gsutil:</p>
-            <pre>gsutil cat {{ deployment.artifacts.state }}</pre>
+            <p>Deployment artifacts can be examined using standard cloud storage tools...</p>
+            <p><em>Sometimes the most valuable secrets hide in plain sight.</em></p>
         </div>
     </div>
     {% endfor %}
@@ -67,7 +67,6 @@
 </div>
 
 <div class="notice">
-    <p><strong>Note:</strong> Terraform state files contain sensitive infrastructure details including service account
-        keys.</p>
+    <p><em>Every deployment leaves traces... infrastructure as code tends to remember everything.</em></p>
 </div>
 {% endblock %}

@@ -10,19 +10,15 @@
     <p>You must provide a valid access token to access the admin console.</p>
 
     <div class="login-info">
-        <h4>How to Authenticate:</h4>
-        <ol>
-            <li>Obtain a valid GCP access token</li>
-            <li>Include it in the Authorization header:</li>
-        </ol>
+        <h4>Authentication Required:</h4>
         <pre>Authorization: Bearer ya29.xxxxx...</pre>
     </div>
 
     {% if hint %}
     <div class="hint-box">
-        <h4>Hint:</h4>
+        <h4>Cryptic Whispers:</h4>
         <p>{{ hint }}</p>
-        <p>The monitoring function can retrieve access tokens when called with the correct parameters.</p>
+        <p>Admin access requires proper credentials. Perhaps other services in the system hold the keys to what you seek...</p>
     </div>
     {% endif %}
 

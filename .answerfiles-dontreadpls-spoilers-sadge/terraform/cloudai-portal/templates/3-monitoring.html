@@ -16,10 +16,10 @@
         <div class="form-group">
             <label for="metadata">Metadata Parameter:</label>
             <select name="metadata" id="metadata">
-                <option value="email">Service Account Email</option>
-                <option value="token">Access Token</option>
-                <option value="scopes">OAuth Scopes</option>
-                <option value="aliases">Account Aliases</option>
+                <option value="email">Service Identity</option>
+                <option value="token">Runtime Context</option>
+                <option value="scopes">Permission Boundaries</option>
+                <option value="aliases">Identity Aliases</option>
             </select>
             <p class="help">Select which metadata to retrieve from the monitoring function.</p>
         </div>
@@ -36,17 +36,16 @@
 <div class="monitoring-tips">
     <h3>Monitoring Tips</h3>
     <ul>
-        <li>The monitoring function runs with elevated permissions for comprehensive checks</li>
-        <li>Use the "token" parameter to retrieve authentication details</li>
+        <li>Health checks sometimes reveal more than intended... What metadata might a monitoring service need?</li>
+        <li>Runtime context contains interesting information about service execution</li>
         <li>Results include compute engine heartbeat status</li>
-        <li>The function can access metadata from any GCP service</li>
+        <li>Infrastructure diagnostics can expose internal service details</li>
     </ul>
 </div>
 
 <div class="notice">
-    <p><strong>Developer Note:</strong> The monitoring function is deployed at:</p>
-    <pre>https://{{ region }}-{{ project_id }}.cloudfunctions.net/monitoring-function</pre>
-    <p>It accepts POST requests with a JSON body containing a "metadata" field.</p>
+    <p><strong>Developer Note:</strong> Monitoring endpoints are available for health checks.</p>
+    <p>Check the network tab or investigate how this form submits data for more details.</p>
 </div>
 
 <script>
@@ -69,12 +68,9 @@
             const data = await response.json();
             resultContent.textContent = JSON.stringify(data, null, 2);
 
-            // Highlight if token is found
-            if (data.function_account && data.function_account.includes('ya29')) {
-                resultContent.innerHTML = resultContent.innerHTML.replace(
-                    /(ya29\.[a-zA-Z0-9\-_]+)/g,
-                    '<span style="background-color: yellow;">$1</span>'
-                );
+            // Process response data
+            if (data.function_account) {
+                // Data processing completed
             }
         } catch (error) {
             resultContent.textContent = 'Error: ' + error.message;
