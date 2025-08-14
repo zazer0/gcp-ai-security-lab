@@ -24,7 +24,7 @@ variable "flag2_module3_key" {
 }
 
 variable "flag3_module4_key" {
-  description = "Flag value to unlock Module 4 (Admin). This flag is found in the terraform state file during Module 2."
+  description = "Flag value to unlock Module 4 (Admin). This flag is found in the terraform state file during Module 3."
   type        = string
   default     = "flag{youre_in_now_escalate}"
 }
