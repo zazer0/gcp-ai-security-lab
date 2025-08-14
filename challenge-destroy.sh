@@ -8,7 +8,8 @@ PROJECT_NUMBER=""
 REGION=""
 
 # Define directory structure - matching challenge-setup.sh
-ANSWER_DIR='./.answerfiles-dontreadpls-spoilers-sadge'
+THIS_DIR="$(realpath .)"
+ANSWER_DIR="${THIS_DIR}/.answerfiles-dontreadpls-spoilers-sadge"
 TEMPFILE_DIR="${ANSWER_DIR}/temporary_files"
 TFMAIN_DIR="${ANSWER_DIR}/terraform"
 TFMOD1_DIR="${ANSWER_DIR}/terraform_module1"
@@ -24,6 +25,13 @@ check_terraform_state() {
     fi
     echo "No state file found in $dir"
     return 1
+}
+
+# Helper function to check if a resource is already in terraform state
+is_resource_in_state() {
+    local resource_address=$1
+    terraform state list 2>/dev/null | grep -q "^${resource_address}$"
+    return $?
 }
 
 # Function to detect and report zombie resources
@@ -217,36 +225,48 @@ cleanup_all_gcp_resources() {
 import_module2_resources() {
     echo "Attempting to import module2 resources into state..."
     
-    # Check if instance exists and import
+    # Check if instance exists and import (only if not already in state)
     if gcloud compute instances describe app-prod-instance-module2 \
         --zone=us-east1-b --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Importing compute instance..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_compute_instance.compute-instance-module2 \
-            "projects/$PROJECT_ID/zones/us-east1-b/instances/app-prod-instance-module2" \
-            2>/dev/null || true
+        if ! is_resource_in_state "google_compute_instance.compute-instance-module2"; then
+            echo "  Importing compute instance..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_compute_instance.compute-instance-module2 \
+                "projects/$PROJECT_ID/zones/us-east1-b/instances/app-prod-instance-module2" \
+                2>/dev/null || true
+        else
+            echo "  Compute instance already in state, skipping import"
+        fi
     fi
     
-    # Check if bucket exists and import
+    # Check if bucket exists and import (only if not already in state)
     if gcloud storage buckets describe "gs://file-uploads-$PROJECT_ID" &>/dev/null; then
-        echo "  Importing storage bucket..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_storage_bucket.bucket-module2 \
-            "file-uploads-$PROJECT_ID" 2>/dev/null || true
+        if ! is_resource_in_state "google_storage_bucket.bucket-module2"; then
+            echo "  Importing storage bucket..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_storage_bucket.bucket-module2 \
+                "file-uploads-$PROJECT_ID" 2>/dev/null || true
+        else
+            echo "  Storage bucket already in state, skipping import"
+        fi
     fi
     
-    # Check if secret exists and import
+    # Check if secret exists and import (only if not already in state)
     if gcloud secrets describe ssh-key --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Importing secret..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_secret_manager_secret.ssh-secret-module2 \
-            "projects/$PROJECT_ID/secrets/ssh-key" 2>/dev/null || true
+        if ! is_resource_in_state "google_secret_manager_secret.ssh-secret-module2"; then
+            echo "  Importing secret..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_secret_manager_secret.ssh-secret-module2 \
+                "projects/$PROJECT_ID/secrets/ssh-key" 2>/dev/null || true
+        else
+            echo "  Secret already in state, skipping import"
+        fi
     fi
 }
 
@@ -255,106 +275,142 @@ import_terraform_resources() {
     echo "Attempting to import main terraform resources into state..."
     
     # Module 1 resources
-    # Check if bucket-service-account exists and import
+    # Check if bucket-service-account exists and import (only if not already in state)
     if gcloud iam service-accounts describe "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
-        echo "  Importing bucket-service-account..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_service_account.bucket-service-account \
-            "projects/$PROJECT_ID/serviceAccounts/bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
-            2>/dev/null || true
-    fi
-    
-    # Check if DevBucketAccess role exists and import
-    if gcloud iam roles describe DevBucketAccess --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Importing DevBucketAccess role..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_project_iam_custom_role.dev-bucket-access \
-            "projects/$PROJECT_ID/roles/DevBucketAccess" \
-            2>/dev/null || true
-    fi
-    
-    # Check if modeldata buckets exist and import
-    if gcloud storage buckets describe "gs://modeldata-dev-$PROJECT_ID" &>/dev/null; then
-        echo "  Importing modeldata-dev bucket..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_storage_bucket.modeldata-dev \
-            "modeldata-dev-$PROJECT_ID" 2>/dev/null || true
-    fi
-    
-    if gcloud storage buckets describe "gs://modeldata-prod-$PROJECT_ID" &>/dev/null; then
-        echo "  Importing modeldata-prod bucket..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_storage_bucket.modeldata-prod \
-            "modeldata-prod-$PROJECT_ID" 2>/dev/null || true
-    fi
-    
-    # Module 3 resources
-    # Check if monitoring-function service account exists and import
-    if gcloud iam service-accounts describe "monitoring-function@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
-        echo "  Importing monitoring-function service account..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_service_account.monitoring-function \
-            "projects/$PROJECT_ID/serviceAccounts/monitoring-function@$PROJECT_ID.iam.gserviceaccount.com" \
-            2>/dev/null || true
-    fi
-    
-    # Check if cloud-function-bucket exists and import
-    if gcloud storage buckets describe "gs://cloud-function-bucket-module3-$PROJECT_ID" &>/dev/null; then
-        echo "  Importing cloud-function-bucket..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_storage_bucket.cloud-function-bucket \
-            "cloud-function-bucket-module3-$PROJECT_ID" 2>/dev/null || true
-    fi
-    
-    # Check if cloudai-portal function exists and import (only if not UNKNOWN/ERROR)
-    if gcloud functions describe cloudai-portal --region="$REGION" &>/dev/null; then
-        func_state=$(gcloud functions describe cloudai-portal --region="$REGION" --format="value(state)" 2>/dev/null)
-        if [ "$func_state" != "UNKNOWN" ] && [ "$func_state" != "ERROR" ]; then
-            echo "  Attempting to import cloudai-portal function (state: $func_state)..."
+        if ! is_resource_in_state "google_service_account.bucket-service-account"; then
+            echo "  Importing bucket-service-account..."
             terraform import \
                 -var="project_id=$PROJECT_ID" \
                 -var="project_number=$PROJECT_NUMBER" \
-                google_cloudfunctions2_function.cloudai_portal \
-                "projects/$PROJECT_ID/locations/$REGION/functions/cloudai-portal" \
-                2>/dev/null || echo "    Import failed, will force delete"
+                google_service_account.bucket-service-account \
+                "projects/$PROJECT_ID/serviceAccounts/bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" \
+                2>/dev/null || true
+        else
+            echo "  bucket-service-account already in state, skipping import"
+        fi
+    fi
+    
+    # Check if DevBucketAccess role exists and import (only if not already in state)
+    if gcloud iam roles describe DevBucketAccess --project="$PROJECT_ID" &>/dev/null; then
+        if ! is_resource_in_state "google_project_iam_custom_role.dev-bucket-access"; then
+            echo "  Importing DevBucketAccess role..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_project_iam_custom_role.dev-bucket-access \
+                "projects/$PROJECT_ID/roles/DevBucketAccess" \
+                2>/dev/null || true
+        else
+            echo "  DevBucketAccess role already in state, skipping import"
+        fi
+    fi
+    
+    # Check if modeldata buckets exist and import (only if not already in state)
+    if gcloud storage buckets describe "gs://modeldata-dev-$PROJECT_ID" &>/dev/null; then
+        if ! is_resource_in_state "google_storage_bucket.modeldata-dev"; then
+            echo "  Importing modeldata-dev bucket..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_storage_bucket.modeldata-dev \
+                "modeldata-dev-$PROJECT_ID" 2>/dev/null || true
+        else
+            echo "  modeldata-dev bucket already in state, skipping import"
+        fi
+    fi
+    
+    if gcloud storage buckets describe "gs://modeldata-prod-$PROJECT_ID" &>/dev/null; then
+        if ! is_resource_in_state "google_storage_bucket.modeldata-prod"; then
+            echo "  Importing modeldata-prod bucket..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_storage_bucket.modeldata-prod \
+                "modeldata-prod-$PROJECT_ID" 2>/dev/null || true
+        else
+            echo "  modeldata-prod bucket already in state, skipping import"
+        fi
+    fi
+    
+    # Module 3 resources
+    # Check if monitoring-function service account exists and import (only if not already in state)
+    if gcloud iam service-accounts describe "monitoring-function@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
+        if ! is_resource_in_state "google_service_account.monitoring-function"; then
+            echo "  Importing monitoring-function service account..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_service_account.monitoring-function \
+                "projects/$PROJECT_ID/serviceAccounts/monitoring-function@$PROJECT_ID.iam.gserviceaccount.com" \
+                2>/dev/null || true
+        else
+            echo "  monitoring-function service account already in state, skipping import"
+        fi
+    fi
+    
+    # Check if cloud-function-bucket exists and import (only if not already in state)
+    if gcloud storage buckets describe "gs://cloud-function-bucket-module3-$PROJECT_ID" &>/dev/null; then
+        if ! is_resource_in_state "google_storage_bucket.cloud-function-bucket"; then
+            echo "  Importing cloud-function-bucket..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_storage_bucket.cloud-function-bucket \
+                "cloud-function-bucket-module3-$PROJECT_ID" 2>/dev/null || true
+        else
+            echo "  cloud-function-bucket already in state, skipping import"
+        fi
+    fi
+    
+    # Check if cloudai-portal function exists and import (only if not UNKNOWN/ERROR and not already in state)
+    if gcloud functions describe cloudai-portal --region="$REGION" &>/dev/null; then
+        func_state=$(gcloud functions describe cloudai-portal --region="$REGION" --format="value(state)" 2>/dev/null)
+        if [ "$func_state" != "UNKNOWN" ] && [ "$func_state" != "ERROR" ]; then
+            if ! is_resource_in_state "google_cloudfunctions2_function.cloudai_portal"; then
+                echo "  Attempting to import cloudai-portal function (state: $func_state)..."
+                terraform import \
+                    -var="project_id=$PROJECT_ID" \
+                    -var="project_number=$PROJECT_NUMBER" \
+                    google_cloudfunctions2_function.cloudai_portal \
+                    "projects/$PROJECT_ID/locations/$REGION/functions/cloudai-portal" \
+                    2>/dev/null || echo "    Import failed, will force delete"
+            else
+                echo "  cloudai-portal function already in state, skipping import"
+            fi
         else
             echo "  cloudai-portal is in $func_state state - skipping import, will force delete"
         fi
     fi
     
     # Challenge 5 resources
-    # Check if terraform-pipeline service account exists and import
+    # Check if terraform-pipeline service account exists and import (only if not already in state)
     if gcloud iam service-accounts describe "terraform-pipeline@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null; then
-        echo "  Importing terraform-pipeline service account..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_service_account.impersonation-challenge-5 \
-            "projects/$PROJECT_ID/serviceAccounts/terraform-pipeline@$PROJECT_ID.iam.gserviceaccount.com" \
-            2>/dev/null || true
+        if ! is_resource_in_state "google_service_account.impersonation-challenge-5"; then
+            echo "  Importing terraform-pipeline service account..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_service_account.impersonation-challenge-5 \
+                "projects/$PROJECT_ID/serviceAccounts/terraform-pipeline@$PROJECT_ID.iam.gserviceaccount.com" \
+                2>/dev/null || true
+        else
+            echo "  terraform-pipeline service account already in state, skipping import"
+        fi
     fi
     
-    # Check if TerraformPipelineProjectAdmin role exists and import
+    # Check if TerraformPipelineProjectAdmin role exists and import (only if not already in state)
     if gcloud iam roles describe TerraformPipelineProjectAdmin --project="$PROJECT_ID" &>/dev/null; then
-        echo "  Importing TerraformPipelineProjectAdmin role..."
-        terraform import \
-            -var="project_id=$PROJECT_ID" \
-            -var="project_number=$PROJECT_NUMBER" \
-            google_project_iam_custom_role.project-iam-setter-role-challenge5 \
-            "projects/$PROJECT_ID/roles/TerraformPipelineProjectAdmin" \
-            2>/dev/null || true
+        if ! is_resource_in_state "google_project_iam_custom_role.project-iam-setter-role-challenge5"; then
+            echo "  Importing TerraformPipelineProjectAdmin role..."
+            terraform import \
+                -var="project_id=$PROJECT_ID" \
+                -var="project_number=$PROJECT_NUMBER" \
+                google_project_iam_custom_role.project-iam-setter-role-challenge5 \
+                "projects/$PROJECT_ID/roles/TerraformPipelineProjectAdmin" \
+                2>/dev/null || true
+        else
+            echo "  TerraformPipelineProjectAdmin role already in state, skipping import"
+        fi
     fi
 }
 
@@ -395,7 +451,7 @@ remove_module1_from_main_state() {
     echo "  Removing service account key from state..."
     terraform state rm google_service_account_key.bucket-sa-key 2>/dev/null || true
     
-    cd ../..
+    cd ..
     echo "Module 1 resources removed from main terraform state"
 }
 
