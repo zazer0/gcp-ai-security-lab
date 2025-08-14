@@ -494,6 +494,7 @@ if echo "$SSRF_RESPONSE" | grep -q "function_account"; then
             
             if echo "$COMPUTE_TEST" | grep -q "NAME\|ZONE\|MACHINE_TYPE"; then
                 print_pass "Function token can list compute instances (VM token cannot)!"
+                echo "$EXTRACTED_TOKEN" > "${VAL_TEST_DIR}/function_token.txt"
             else
                 print_info "Could not verify compute access with function token"
             fi
