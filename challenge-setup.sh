@@ -19,17 +19,21 @@ ANSWER_DIR='./.answerfiles-dontreadpls-spoilers-sadge'
 
 #  create directory for temporary files
 TEMPFILE_DIR="${ANSWER_DIR}/temporary_files"
-mkdir -p "${TEMPFILE_DIR}"
+mkdir -p ${TEMPFILE_DIR}
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to create ${TEMPFILE_DIR} directory"
     exit 1
 fi
+
+# INFO: TF Maindir already exists at this path, so no need to create it
+TFMAIN_DIR="${ANSWER_DIR}/terraform"
 
 # Module 1 setup - Create ${TFMOD1_DIR} directory for separate state
 echo "##########################################################"
 echo "> Beginning terraform setup for - Module 1."
 echo "##########################################################"
 
+# INFO: Mod1 setup involves creating a duplicate, so we 'cp' its files
 TFMOD1_DIR="${ANSWER_DIR}/terraform_module1"
 mkdir -p ${TFMOD1_DIR}
 cp terraform/module1.tf ${TFMOD1_DIR}/
@@ -111,6 +115,7 @@ if [ $? -ne 0 ]; then
     echo "ERROR: Terraform apply failed for Module 1"
     exit 1
 fi
+
 cd ../
 
 # Call Module 1 specific setup script
@@ -136,8 +141,8 @@ echo "##########################################################"
 echo "> Beginning terraform setup for - Module 2."
 echo "##########################################################"
 
+# INFO: Mod2 already exists at this path, no copying needed.
 TFMOD2_DIR="${ANSWER_DIR}/terraform_module2"
-mkdir -p ${TFMOD2_DIR}
 
 cd ${TFMOD2_DIR}
 terraform init -input=false
@@ -162,7 +167,8 @@ echo "##########################################################"
 echo "> Beginning terraform setup for - challenges 4 and 5."
 echo "##########################################################"
 
-cd terraform
+# INFO: TF maindir already exists; no need to create or populate.
+cd ${TFMAIN_DIR}
 terraform init -input=false
 if [ $? -ne 0 ]; then
     echo "ERROR: Terraform init failed for main terraform"
@@ -308,7 +314,7 @@ if [ $? -ne 0 ]; then
     echo "WARNING: Failed to remove alice from google-sudoers (may not exist)"
 fi
 # copy the function source code directly on the bucket
-gsutil cp terraform/script/main.py gs://cloud-function-bucket-module3-$PROJECT_ID/
+gsutil cp ${TFMAIN_DIR}/script/main.py gs://cloud-function-bucket-module3-$PROJECT_ID/
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to copy main.py to cloud function bucket"
     exit 1
@@ -320,7 +326,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Get CloudAI Portal URL
-PORTAL_URL=$(cd terraform && terraform output -raw cloudai_portal_url 2>/dev/null)
+PORTAL_URL=$(cd ${TFMAIN_DIR} && terraform output -raw cloudai_portal_url 2>/dev/null)
 if [ -z "$PORTAL_URL" ]; then
     PORTAL_URL="Portal not deployed"
 fi
@@ -401,7 +407,7 @@ if [ -z "$STUDENT_EMAIL" ]; then
     echo "ERROR: Failed to get student-workshop service account email from terraform"
     exit 1
 fi
-cd ..
+cd ../
 
 # Save the key to a file
 echo "$STUDENT_KEY" | base64 -d > ${TEMPFILE_DIR}/student-workshop-key.json
