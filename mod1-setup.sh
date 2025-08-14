@@ -55,4 +55,8 @@ EOF
 # Upload portal info to dev bucket
 gsutil cp temporary_files/portal_info.txt gs://modeldata-dev-$PROJECT_ID/
 
+# Upload intermediate flag to PROD bucket
+echo "well-done-what-else-can-you-access" > temporary_files/flag1-partB.txt
+gsutil cp temporary_files/flag1-partB.txt gs://modeldata-prod-$PROJECT_ID/
+
 echo "> Module 1 setup complete!"
