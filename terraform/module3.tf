@@ -35,6 +35,12 @@ resource "google_storage_bucket_object" "gcs-function-file" {
   source = data.archive_file.main.output_path
 }
 
+resource "google_storage_bucket_object" "flag2-part-c" {
+  name    = "flag2-part-C.txt"
+  bucket  = google_storage_bucket.cloud-function-bucket.name
+  content = "well-done-youre-very-close"
+}
+
 resource "google_cloudfunctions2_function" "function" {
   name        = "monitoring-function"
   description = "This is a python function used for Module 3"

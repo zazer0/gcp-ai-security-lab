@@ -21,9 +21,15 @@ ZONE=$(gcloud compute instances list --project $PROJECT_ID | grep module2 | awk 
 # upload the state file to the storage bucket
 gcloud storage cp ./terraform_module2/terraform.tfstate gs://file-uploads-$PROJECT_ID/infrastructure_config.tfstate
 
+# Create and upload flag2.txt to the bucket
+echo "flag{found-the-secret-infrastructure}" > temporary_files/flag2.txt
+gcloud storage cp temporary_files/flag2.txt gs://file-uploads-$PROJECT_ID/
+
 COMPUTE_IP=$(gcloud compute instances describe app-prod-instance-module2 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
-echo "You found flag 1!" > temporary_files/flag1.txt
-scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no temporary_files/flag1.txt alice@$COMPUTE_IP:/home/alice/
+
+# Create and upload flag3.txt to the VM
+echo "flag{youre-in-now-destroy-them}" > temporary_files/flag3.txt
+scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no temporary_files/flag3.txt alice@$COMPUTE_IP:/home/alice/
 
 # Get CloudAI Portal URL from terraform output
 PORTAL_URL=$(cd terraform && terraform output -raw cloudai_portal_url 2>/dev/null || echo "Portal deployment pending")

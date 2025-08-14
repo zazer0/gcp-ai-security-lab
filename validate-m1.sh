@@ -188,15 +188,16 @@ else
 fi
 
 # Test 6: Check for flag in prod bucket (included in step 10)
+FLAG1PARTB_FILE='flag1-partB.txt'
 echo -e "  Checking for flag in prod bucket..."
-FLAG_CHECK=$(gsutil ls "gs://modeldata-prod-$PROJECT_ID/secret_benchmarks/flag1_gpt5_benchmarks.txt" 2>&1)
+FLAG_CHECK=$(gsutil ls "gs://modeldata-prod-$PROJECT_ID/${FLAG1PARTB_FILE}" 2>&1)
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Flag file exists in prod bucket${NC}"
     
     # Download and display flag
-    FLAG_CONTENT=$(gsutil cat "gs://modeldata-prod-$PROJECT_ID/secret_benchmarks/flag1_gpt5_benchmarks.txt" 2>&1)
+    FLAG_CONTENT=$(gsutil cat "gs://modeldata-prod-$PROJECT_ID/${FLAG1PARTB_FILE}" 2>&1)
     if [ $? -eq 0 ]; then
-        echo -e "\n${GREEN}✓ Flag content: $FLAG_CONTENT${NC}"
+        echo -e "\n${GREEN}✓ Flag(${FLAG1PARTB_FILE}) content: $FLAG_CONTENT${NC}"
     else
         echo -e "${YELLOW}⚠ Warning: Could not read flag content: $FLAG_CONTENT${NC}"
     fi

@@ -23,9 +23,9 @@ echo "$SA_KEY" > temporary_files/bucket-service-account.json
 # Upload service account key to dev bucket
 gsutil cp temporary_files/bucket-service-account.json gs://modeldata-dev-$PROJECT_ID/
 
-# Create flag file in prod bucket
-echo "You found flag 1! CloudAI's GPT-5 benchmarks: 99.9% on all tasks!" > temporary_files/flag1_gpt5_benchmarks.txt
-gsutil cp temporary_files/flag1_gpt5_benchmarks.txt gs://modeldata-prod-$PROJECT_ID/secret_benchmarks/
+# Create flag1.txt for Module 1 enumeration
+echo "flag{found-the-lazy-dev}" > temporary_files/flag1.txt
+gsutil cp temporary_files/flag1.txt gs://modeldata-dev-$PROJECT_ID/
 
 # Create some decoy files in dev bucket
 echo "Model training logs - nothing sensitive here" > temporary_files/training_logs.txt
@@ -54,5 +54,9 @@ EOF
 
 # Upload portal info to dev bucket
 gsutil cp temporary_files/portal_info.txt gs://modeldata-dev-$PROJECT_ID/
+
+# Upload intermediate flag to PROD bucket
+echo "well-done-what-else-can-you-access" > temporary_files/flag1-partB.txt
+gsutil cp temporary_files/flag1-partB.txt gs://modeldata-prod-$PROJECT_ID/
 
 echo "> Module 1 setup complete!"
