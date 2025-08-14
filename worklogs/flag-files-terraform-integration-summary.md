@@ -32,22 +32,21 @@ Successfully integrated CTF-style flag files across all GCP AI Security Lab modu
 - **Discovery Context**: Found alongside exposed terraform.tfstate file
 - **Educational Purpose**: Demonstrates risks of exposed infrastructure configuration
 
--### Module 3: VM Exploitation Flags
-**Flag2 Part B - VM Flag**:
+### Module 3: VM, SSRF and Metadata Exploitation Flags
+**Flag3 - VM Flag**:
 - **File**: `mod2-setup.sh` (lines 32-34)
-- **Location**: VM `/home/alice/flag2-partB.txt`
-- **Content**: `"good-job-now-look-around"`
+- **Location**: VM `/home/alice/flag3.txt`
+- **Content**: `flag{youre-in-now-destroy-them}`
 - **Discovery Context**: Found after SSH access via leaked keys + IP
 
-- **Part C - Cloud Function Bucket Flag**:
-### Module 3: SSRF and Metadata Exploitation Flags
-- **flag2-part-C.txt**:
+**flag3-partB.txt - SSRF Flag**:
   - **File**: `terraform/module3.tf` (lines 38-42)
-  - **Location**: `gs://cloud-function-bucket-module3-{project}/flag2-part-C.txt`
+  - **Location**: `gs://cloud-function-bucket-module3-{project}/flag3-partB.txt`
   - **Content**: `"well-done-youre-very-close"`
   - **Discovery Context**: Found during SSRF exploitation phase
 
-- **flag4**:
+**flag4 - Metadata Flag**:
+> TODO: this is semifinal and needs to match the others if time to add challenge5; come back if time!
   - **File**: `terraform/script/main.py` (line 24)
   - **Location**: Monitoring function response
   - **Content**: `"You found flag 4!"`
@@ -59,8 +58,6 @@ Successfully integrated CTF-style flag files across all GCP AI Security Lab modu
   - **Location**: IAM binding condition
   - **Content**: Title: `"flag5"`, Description: `"You found flag5!"`
   - **Discovery Context**: Found during IAM privilege escalation
-
-- **flag3-attack-me**: Status TODO - planned for instance naming in privilege escalation scenario
 
 ## Implementation Patterns
 
