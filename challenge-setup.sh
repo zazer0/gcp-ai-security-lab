@@ -293,7 +293,7 @@ fi
 echo "Function URL: $FUNCTION_URL"
 
 # copy function invocation script on compute engine
-scp -i ${TEMPFILE_DIR}/leaked_ssh_key -o StrictHostKeyChecking=no ./invoke_monitoring_function.sh alice@$COMPUTE_IP:/tmp
+scp -i ${TEMPFILE_DIR}/leaked_ssh_key -o StrictHostKeyChecking=no "${ANSWER_DIR}/invoke_monitoring_function.sh" alice@$COMPUTE_IP:/tmp
 if [ $? -ne 0 ]; then
     echo "ERROR: Failed to copy invoke_monitoring_function.sh to compute instance"
     exit 1
