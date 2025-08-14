@@ -103,7 +103,7 @@ print_status "$GREEN" "  Project ID: $PROJECT_ID"
 
 # Get PROJECT_NUMBER
 print_status "$YELLOW" "  Getting project number..."
-PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --quiet 2>&1 | grep -Eo "project(s/|Number: ')[0-9]{12}" | grep -Eo '[0-9]+')"
+PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --quiet 2>&1 | grep -Eo "project(s\/|Number: ')[0-9]{10,}" | grep -Eo '[0-9]+')"
 check_success "Failed to get project number. Ensure gcloud is configured and you have access to project: $PROJECT_ID"
 
 print_status "$GREEN" "  Project Number: $PROJECT_NUMBER"
