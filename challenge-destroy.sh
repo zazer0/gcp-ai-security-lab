@@ -477,7 +477,7 @@ fi
 
 # Get project number
 if [ -z "$PROJECT_NUMBER" ]; then
-    PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --quiet 2>&1 | grep -Eo '[0-9]{12}'|head -1)
+    PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --quiet 2>&1 | grep -Eo "project(s/|Number: ')[0-9]{12}" | grep -Eo '[0-9]+')"
     echo "Parsed project number: $PROJECT_NUMBER"
 else
     echo "Detected project number: $PROJECT_NUMBER"
