@@ -64,3 +64,6 @@ temporary_files/*
 
 # Claude worktree management
 .claude-wt/worktrees
+
+# Python
+__pycache__

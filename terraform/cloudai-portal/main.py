@@ -5,6 +5,7 @@ import json
 from datetime import datetime
 import google.auth
 from google.auth.transport.requests import Request
+from pathlib import Path
 
 app = Flask(__name__)
 
@@ -16,6 +17,46 @@ MONITORING_FUNCTION_URL = os.environ.get('MONITORING_FUNCTION_URL', '')
 # API Keys (intentionally vulnerable)
 API_KEY = os.environ.get('CLOUDAI_API_KEY', 'dev-key-12345')
 ADMIN_KEY = os.environ.get('CLOUDAI_ADMIN_KEY', 'admin-secret-key')
+
+# Flag values from environment
+FLAGS = {
+    'FLAG1': os.environ.get('FLAG1', 'flag{dev_bucket_found}'),
+    'FLAG2': os.environ.get('FLAG2', 'flag{terraform_state_accessed}')
+}
+
+# Flag gating functions
+def init_flag_dir():
+    """Initialize flag progress directory"""
+    flag_dir = Path('/tmp/flag_progress')
+    flag_dir.mkdir(exist_ok=True)
+    return flag_dir
+
+def check_module_unlocked(module_num):
+    """Check if a module is unlocked"""
+    # Module 1 is always unlocked
+    if module_num == 1:
+        return True
+    
+    flag_dir = Path('/tmp/flag_progress')
+    flag_file = flag_dir / f'module_{module_num}_unlocked'
+    return flag_file.exists()
+
+def unlock_module(module_num):
+    """Unlock a module by creating the flag file"""
+    flag_dir = Path('/tmp/flag_progress')
+    flag_file = flag_dir / f'module_{module_num}_unlocked'
+    
+    timestamp = datetime.now().isoformat()
+    flag_file.write_text(f'Unlocked at: {timestamp}\n')
+
+def get_progress():
+    """Get current module unlock progress"""
+    return {
+        'module1': check_module_unlocked(1),
+        'module2': check_module_unlocked(2),
+        'module3': check_module_unlocked(3),
+        'module4': check_module_unlocked(4)
+    }
 
 def get_identity_token():
     """Get identity token for service-to-service auth"""
@@ -34,6 +75,46 @@ def index():
         project_id=PROJECT_ID,
         region=REGION
     )
+
+@app.route('/submit-flag', methods=['POST'])
+def submit_flag():
+    """Handle flag submission"""
+    submitted_flag = request.form.get('flag', '').strip()
+    
+    if not submitted_flag:
+        return jsonify({
+            'success': False,
+            'message': 'Please enter a flag'
+        }), 400
+    
+    # Check FLAG1 (unlocks module 2)
+    if submitted_flag == FLAGS['FLAG1']:
+        unlock_module(2)
+        return jsonify({
+            'success': True,
+            'message': 'Correct! Module 2 (System Status) is now unlocked.',
+            'module_unlocked': 2
+        })
+    
+    # Check FLAG2 (unlocks module 3)
+    elif submitted_flag == FLAGS['FLAG2']:
+        unlock_module(3)
+        return jsonify({
+            'success': True,
+            'message': 'Correct! Module 3 (Monitoring) is now unlocked.',
+            'module_unlocked': 3
+        })
+    
+    else:
+        return jsonify({
+            'success': False,
+            'message': 'Invalid flag. Please try again.'
+        }), 400
+
+@app.route('/progress')
+def progress():
+    """Return current module unlock status"""
+    return jsonify(get_progress())
 
 @app.route('/docs')
 def developer_docs():
@@ -98,6 +179,14 @@ def predict():
 @app.route('/status')
 def deployment_status():
     """Module 2 entry point - System status page"""
+    # Check if module 2 is unlocked
+    if not check_module_unlocked(2):
+        return render_template('locked.html',
+            module_num=2,
+            module_name='System Status',
+            hint='Find the flag in the development bucket to unlock this module.'
+        )
+    
     deployments = [{
         'id': 'deploy-2024-01-15',
         'timestamp': '2024-01-15 14:23:11',
@@ -110,7 +199,7 @@ def deployment_status():
         }
     }]
     
-    return render_template('status.html',
+    return render_template('2-system-status.html',
         deployments=deployments,
         project_id=PROJECT_ID
     )
@@ -118,6 +207,14 @@ def deployment_status():
 @app.route('/monitoring')
 def monitoring_dashboard():
     """Module 3 entry point - Monitoring dashboard"""
+    # Check if module 3 is unlocked
+    if not check_module_unlocked(3):
+        return render_template('locked.html',
+            module_num=3,
+            module_name='Monitoring Dashboard',
+            hint='Find the flag in the terraform state file to unlock this module.'
+        )
+    
     return render_template('3-monitoring.html',
         project_id=PROJECT_ID,
         region=REGION
@@ -230,6 +327,9 @@ def cloudai_portal(request):
             rv = app.handle_user_exception(e)
         response = app.make_response(rv)
         return app.process_response(response)
+
+# Initialize flag directory on startup
+init_flag_dir()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8080)

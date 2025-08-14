@@ -44,6 +44,9 @@ resource "google_cloudfunctions2_function" "cloudai_portal" {
       CLOUDAI_ADMIN_KEY = "admin-secret-key"
       # Link to monitoring function
       MONITORING_FUNCTION_URL = google_cloudfunctions2_function.function.service_config[0].uri
+      # Flag values for module gating
+      FLAG1 = var.flag1_value
+      FLAG2 = var.flag2_value
     }
     
     # Use default compute service account (intentionally over-privileged)
@@ -64,4 +67,14 @@ resource "google_cloud_run_service_iam_member" "cloudai_portal_public" {
 output "cloudai_portal_url" {
   value = google_cloudfunctions2_function.cloudai_portal.service_config[0].uri
   description = "URL for the CloudAI Labs web portal"
+}
+
+# Output flag values for debugging (non-sensitive)
+output "flag_configuration" {
+  value = {
+    flag1_value = var.flag1_value
+    flag2_value = var.flag2_value
+  }
+  description = "Flag values configured for module gating"
+  sensitive = false
 }

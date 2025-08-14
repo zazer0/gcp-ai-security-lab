@@ -37,6 +37,9 @@ check_success() {
     fi
 }
 
+echo "Switching to default gcloud config so this script works!"
+gcloud config configurations activate default
+
 # Parse command line arguments
 QUICK_MODE=false
 HEALTH_CHECK=false
@@ -300,6 +303,8 @@ if [ "$TOTAL_TIME" -gt 60 ]; then
     print_status "$YELLOW" "  $0 --quick"
     print_status "$YELLOW" "This skips archive recreation when only updating infrastructure"
 fi
+
+echo "Done! Consider switching to student-workshop configuration before testing..."
 
 # Exit successfully
 exit 0
