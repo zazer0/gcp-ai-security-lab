@@ -10,12 +10,20 @@ Successfully integrated CTF-style flag files across all GCP AI Security Lab modu
   - `flag1_value`: `"flag{found-the-lazy-dev}"` (was `"flag{dev_bucket_found}"`)
   - `flag2_value`: `"flag{found-the-secret-infrastructure}"` (was `"flag{terraform_state_accessed}"`)
 
-### Module 1: Storage Enumeration Flag
-- **File**: `mod1-setup.sh` (lines 26-28)
-- **Location**: `gs://modeldata-dev-{project}/flag1.txt`
-- **Content**: `"flag{found-the-lazy-dev}"`
-- **Discovery Context**: Found alongside leaked service account credentials in dev bucket
-- **Educational Purpose**: Teaches bucket enumeration and credential discovery
+### Module 1: Storage Enumeration Flags
+- **Primary Flag**:
+  - **File**: `mod1-setup.sh` (lines 26-28)
+  - **Location**: `gs://modeldata-dev-{project}/flag1.txt`
+  - **Content**: `"flag{found-the-lazy-dev}"`
+  - **Discovery Context**: Found alongside leaked service account credentials in dev bucket
+
+- **flag1-partB.txt**:
+  - **File**: `mod1-setup.sh` (lines 59-60)
+  - **Location**: `gs://modeldata-prod-{project}/flag1-partB.txt`
+  - **Content**: `"well-done-what-else-can-you-access"`
+  - **Discovery Context**: Found after using leaked service account to access prod bucket
+
+- **Educational Purpose**: Teaches bucket enumeration, credential discovery, and service account privilege testing
 
 ### Module 2: Infrastructure State Flag  
 - **File**: `mod2-setup.sh` (lines 24-26)
@@ -24,23 +32,35 @@ Successfully integrated CTF-style flag files across all GCP AI Security Lab modu
 - **Discovery Context**: Found alongside exposed terraform.tfstate file
 - **Educational Purpose**: Demonstrates risks of exposed infrastructure configuration
 
-### Module 3: Multi-Part Flag System
-- **Part B - VM Flag**:
-  - **File**: `mod2-setup.sh` (lines 32-34)
-  - **Location**: VM `/home/alice/flag2-partB.txt`
-  - **Content**: `"good-job-now-look-around"`
-  - **Discovery Context**: Found after SSH access via leaked keys
-  
+-### Module 3: VM Exploitation Flags
+**Flag2 Part B - VM Flag**:
+- **File**: `mod2-setup.sh` (lines 32-34)
+- **Location**: VM `/home/alice/flag2-partB.txt`
+- **Content**: `"good-job-now-look-around"`
+- **Discovery Context**: Found after SSH access via leaked keys + IP
+
 - **Part C - Cloud Function Bucket Flag**:
+### Module 3: SSRF and Metadata Exploitation Flags
+- **flag2-part-C.txt**:
   - **File**: `terraform/module3.tf` (lines 38-42)
   - **Location**: `gs://cloud-function-bucket-module3-{project}/flag2-part-C.txt`
   - **Content**: `"well-done-youre-very-close"`
   - **Discovery Context**: Found during SSRF exploitation phase
 
-### Module 4: Future Implementation
-- **File**: `terraform/challenge5.tf` (lines 41-43)
-- **Status**: TODO comment added for `"flag3-attack-me"` instance naming
-- **Purpose**: Placeholder for final privilege escalation challenge
+- **flag4**:
+  - **File**: `terraform/script/main.py` (line 24)
+  - **Location**: Monitoring function response
+  - **Content**: `"You found flag 4!"`
+  - **Discovery Context**: Found through SSRF exploitation with metadata token parameter
+
+### Module 4: IAM Privilege Escalation Flags
+- **flag5**:
+  - **File**: `terraform/challenge5.tf` (lines 35-36)
+  - **Location**: IAM binding condition
+  - **Content**: Title: `"flag5"`, Description: `"You found flag5!"`
+  - **Discovery Context**: Found during IAM privilege escalation
+
+- **flag3-attack-me**: Status TODO - planned for instance naming in privilege escalation scenario
 
 ## Implementation Patterns
 
@@ -61,8 +81,8 @@ Successfully integrated CTF-style flag files across all GCP AI Security Lab modu
 ### Progressive Discovery Design
 - **Module 1**: Simple bucket enumeration → credential discovery → flag reward
 - **Module 2**: State file exposure → SSH key extraction → multi-location flag hunt  
-- **Module 3**: SSRF exploitation → metadata access → distributed flag collection
-- **Module 4**: Privilege escalation → final instance compromise (planned)
+- **Module 3**: SSRF exploitation → metadata access → monitoring function flag discovery
+- **Module 4**: IAM privilege escalation → service account impersonation → conditional role flag discovery
 
 ### Portal Integration Alignment
 - **Flag Values**: Match exactly what CloudAI portal expects for module unlocking
@@ -90,10 +110,11 @@ Successfully integrated CTF-style flag files across all GCP AI Security Lab modu
 ## Files Modified
 ```
 terraform/variables.tf        - Updated flag variable defaults
-mod1-setup.sh                - Added Module 1 flag creation
-mod2-setup.sh                - Added Module 2 and 3A flag creation  
-terraform/module3.tf          - Added Module 3B flag bucket object
-terraform/challenge5.tf       - Added Module 4 TODO placeholder
+mod1-setup.sh                - Added Module 1 flags (lines 26-28, 59-60)
+mod2-setup.sh                - Added Module 2 flag creation (lines 24-26, 31-32)
+terraform/module3.tf          - Added Module 3 flag bucket object (lines 38-42)
+terraform/script/main.py      - Added Module 3 monitoring function flag (line 24)
+terraform/challenge5.tf       - Added Module 4 IAM condition flags (lines 35-36)
 ```
 
 ## Validation Strategy
