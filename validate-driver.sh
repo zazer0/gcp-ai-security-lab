@@ -123,8 +123,17 @@ MODULE3_EXIT_CODE=$?
 
 echo "=========================================="
 
+# Step 4d: Run Module 4 validation in validation config
+echo -e "\n${YELLOW}[4d/9] Running Module 4 / Chal5 validation tests...${NC}"
+echo "=========================================="
+
+./validate-c5.sh
+MODULE4_EXIT_CODE=$?
+
+echo "=========================================="
+
 # Combine exit codes (fail if any failed)
-if [ $VALIDATION_EXIT_CODE -ne 0 ] || [ $MODULE2_EXIT_CODE -ne 0 ] || [ $MODULE3_EXIT_CODE -ne 0 ]; then
+if [ $VALIDATION_EXIT_CODE -ne 0 ] || [ $MODULE2_EXIT_CODE -ne 0 ] || [ $MODULE3_EXIT_CODE -ne 0 ] || [ $MODULE4_EXIT_CODE -ne 0 ] ; then
     COMBINED_EXIT_CODE=1
 else
     COMBINED_EXIT_CODE=0
@@ -189,6 +198,7 @@ if [ ${COMBINED_EXIT_CODE:-$VALIDATION_EXIT_CODE} -eq 0 ]; then
     echo "  - Module 1: PASSED"
     echo "  - Module 2: PASSED"
     echo "  - Module 3: PASSED"
+    echo "  - Module 4: PASSED"
     echo "==========================================${NC}"
 else
     echo -e "\n${RED}=========================================="
@@ -213,6 +223,14 @@ else
         echo "  - Module 3: FAILED"
     else
         echo "  - Module 3: PASSED"
+    fi
+    
+
+    # Module 4 status
+    if [ ${MODULE4_EXIT_CODE:-0} -ne 0 ]; then
+        echo "  - Module 4: FAILED"
+    else
+        echo "  - Module 4: PASSED"
     fi
     
     echo "==========================================${NC}"
