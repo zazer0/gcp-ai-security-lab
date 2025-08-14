@@ -46,11 +46,11 @@ terraform/cloudai-portal/
 ├── templates/             
 │   ├── base.html          # Shared layout with CloudAI branding
 │   ├── index.html         # Homepage with feature highlights
-│   ├── docs.html          # API documentation (Module 1)
-│   ├── status.html        # Deployment status (Module 2)
-│   ├── monitoring.html    # Monitoring form (Module 3)
-│   ├── admin.html         # IAM console (Module 4)
-│   └── admin_login.html   # Auth required page
+│   ├── 1-model-downloads.html          # Model Downloads (Module 1)
+│   ├── 2-system-status.html        # Deployment status (Module 2)
+│   ├── 3-monitoring.html    # Monitoring form (Module 3)
+│   └── 4-admin_login.html   # Auth required page # TODO clarify vs below
+│   ├── admin.html         # IAM console (Module 4) # TODO clarify vs above 
 └── static/
     └── style.css          # Professional styling
 ```
