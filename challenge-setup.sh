@@ -15,6 +15,7 @@ if [ -z "$PROJECT_NUMBER" ]; then
     exit 1
 fi
 
+THIS_DIR="$(realpath .)"
 ANSWER_DIR='./.answerfiles-dontreadpls-spoilers-sadge'
 
 #  create directory for temporary files
@@ -118,8 +119,9 @@ fi
 
 cd ../
 
+
 # Call Module 1 specific setup script
-./.answerfiles-dontreadpls-spoilers-sadge/mod1-setup.sh "$PROJECT_ID" "$PROJECT_NUMBER"
+bash .answerfiles-dontreadpls-spoilers-sadge/mod1-setup.sh "$PROJECT_ID" "$PROJECT_NUMBER"
 if [ $? -ne 0 ]; then
     echo "ERROR: Module 1 setup script failed"
     exit 1
@@ -260,7 +262,7 @@ fi
 cd ../
 
 # Call Module 2 specific setup script
-./.answerfiles-dontreadpls-spoilers-sadge/mod2-setup.sh "$PROJECT_ID" "$PROJECT_NUMBER"
+bash .answerfiles-dontreadpls-spoilers-sadge/mod2-setup.sh "$PROJECT_ID" "$PROJECT_NUMBER"
 if [ $? -ne 0 ]; then
     echo "ERROR: Module 2 setup script failed"
     exit 1
