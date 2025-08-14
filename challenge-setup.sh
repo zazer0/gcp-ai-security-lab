@@ -36,9 +36,9 @@ echo "##########################################################"
 # INFO: Mod1 setup involves creating a duplicate, so we 'cp' its files
 TFMOD1_DIR="${ANSWER_DIR}/terraform_module1"
 mkdir -p ${TFMOD1_DIR}
-cp terraform/module1.tf ${TFMOD1_DIR}/
-cp terraform/variables.tf ${TFMOD1_DIR}/
-cp terraform/provider.tf ${TFMOD1_DIR}/
+cp "${TFMAIN_DIR}/module1.tf" ${TFMOD1_DIR}/
+cp "${TFMAIN_DIR}/variables.tf" ${TFMOD1_DIR}/
+cp "${TFMAIN_DIR}/provider.tf" ${TFMOD1_DIR}/
 
 # Force cleanup any orphaned Module 1 service accounts before terraform runs
 # This ensures terraform can create them fresh without conflicts
