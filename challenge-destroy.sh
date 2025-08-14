@@ -7,6 +7,13 @@ PROJECT_ID=""
 PROJECT_NUMBER=""
 REGION=""
 
+# Define directory structure - matching challenge-setup.sh
+ANSWER_DIR='./.answerfiles-dontreadpls-spoilers-sadge'
+TEMPFILE_DIR="${ANSWER_DIR}/temporary_files"
+TFMAIN_DIR="${ANSWER_DIR}/terraform"
+TFMOD1_DIR="${ANSWER_DIR}/terraform_module1"
+TFMOD2_DIR="${ANSWER_DIR}/terraform_module2"
+
 # Function to check terraform state
 check_terraform_state() {
     local dir=$1
@@ -356,12 +363,12 @@ remove_module1_from_main_state() {
     echo "Removing Module 1 resources from main terraform state..."
     
     # Check if terraform directory exists first
-    if [ ! -d "terraform" ]; then
-        echo "  terraform directory does not exist, skipping state cleanup"
+    if [ ! -d "${TFMAIN_DIR}" ]; then
+        echo "  ${TFMAIN_DIR} directory does not exist, skipping state cleanup"
         return 0
     fi
     
-    cd terraform
+    cd ${TFMAIN_DIR}
     
     # Initialize if needed
     if [ ! -d ".terraform" ]; then
@@ -388,7 +395,7 @@ remove_module1_from_main_state() {
     echo "  Removing service account key from state..."
     terraform state rm google_service_account_key.bucket-sa-key 2>/dev/null || true
     
-    cd ..
+    cd ../..
     echo "Module 1 resources removed from main terraform state"
 }
 
@@ -420,7 +427,7 @@ destroy_with_terraform() {
     local has_resources=$(terraform state list 2>/dev/null | grep -c "google_" || echo "0")
     
     # Handle main terraform directory
-    if [ "$has_resources" -eq "0" ] && [ "$dir" = "terraform" ]; then
+    if [ "$has_resources" -eq "0" ] && [ "$dir" = "${TFMAIN_DIR}" ]; then
         echo "Warning: State appears empty, checking for orphaned resources..."
         # Only try import if resources actually exist
         if gcloud iam service-accounts describe "bucket-service-account@$PROJECT_ID.iam.gserviceaccount.com" &>/dev/null || \
@@ -436,7 +443,7 @@ destroy_with_terraform() {
     fi
     
     # Handle module2 directory
-    if [ "$has_resources" -eq "0" ] && [ "$dir" = "terraform_module2" ]; then
+    if [ "$has_resources" -eq "0" ] && [ "$dir" = "${TFMOD2_DIR}" ]; then
         echo "Warning: State appears empty, checking for orphaned resources..."
         # Only try import if resources actually exist
         if gcloud compute instances describe app-prod-instance-module2 --zone=us-east1-b --project="$PROJECT_ID" &>/dev/null || \
@@ -622,7 +629,7 @@ NEEDS_CLEANUP=false
 
 # Remove imported Module 1 resources from main terraform state first
 # This prevents conflicts when terraform_module1 tries to destroy the same resources
-if [ -d "terraform" ] && [ -f "terraform/terraform.tfstate" ]; then
+if [ -d "${TFMAIN_DIR}" ] && [ -f "${TFMAIN_DIR}/terraform.tfstate" ]; then
     echo ""
     echo "##########################################################"
     echo "> Preparing states for clean destroy..."
@@ -632,18 +639,18 @@ fi
 
 # Now destroy in the order where each directory owns its resources
 # Module 1 first (owns the Module 1 resources)
-if [ -d "terraform_module1" ]; then
-    destroy_with_terraform "terraform_module1" || NEEDS_CLEANUP=true
+if [ -d "${TFMOD1_DIR}" ]; then
+    destroy_with_terraform "${TFMOD1_DIR}" || NEEDS_CLEANUP=true
 fi
 
 # Module 2 second
-if [ -d "terraform_module2" ]; then
-    destroy_with_terraform "terraform_module2" || NEEDS_CLEANUP=true
+if [ -d "${TFMOD2_DIR}" ]; then
+    destroy_with_terraform "${TFMOD2_DIR}" || NEEDS_CLEANUP=true
 fi
 
 # Main terraform last (Module 1 resources already removed from state)
-if [ -d "terraform" ]; then
-    destroy_with_terraform "terraform" || NEEDS_CLEANUP=true
+if [ -d "${TFMAIN_DIR}" ]; then
+    destroy_with_terraform "${TFMAIN_DIR}" || NEEDS_CLEANUP=true
 fi
 
 # Always run comprehensive cleanup to catch everything
@@ -662,29 +669,33 @@ echo "##########################################################"
 
 # Remove terraform state files
 echo "Removing terraform state files..."
-rm -f terraform/terraform.tfstate* 2>/dev/null || true
-rm -f terraform_module2/terraform.tfstate* 2>/dev/null || true
-rm -f terraform_module1/terraform.tfstate* 2>/dev/null || true
+rm -f ${TFMAIN_DIR}/terraform.tfstate* 2>/dev/null || true
+rm -f ${TFMOD2_DIR}/terraform.tfstate* 2>/dev/null || true
+rm -f ${TFMOD1_DIR}/terraform.tfstate* 2>/dev/null || true
 
 # Remove terraform lock files
 echo "Removing terraform lock files..."
-rm -f terraform/.terraform.lock.hcl 2>/dev/null || true
-rm -f terraform_module2/.terraform.lock.hcl 2>/dev/null || true
-rm -f terraform_module1/.terraform.lock.hcl 2>/dev/null || true
+rm -f ${TFMAIN_DIR}/.terraform.lock.hcl 2>/dev/null || true
+rm -f ${TFMOD2_DIR}/.terraform.lock.hcl 2>/dev/null || true
+rm -f ${TFMOD1_DIR}/.terraform.lock.hcl 2>/dev/null || true
 
 # Remove terraform directories
 echo "Removing .terraform directories..."
-rm -rf terraform/.terraform 2>/dev/null || true
-rm -rf terraform_module2/.terraform 2>/dev/null || true
-rm -rf terraform_module1/.terraform 2>/dev/null || true
-
-# Remove copied module directories
-echo "Removing terraform_module1 directory..."
-rm -rf terraform_module1 2>/dev/null || true
+rm -rf ${TFMAIN_DIR}/.terraform 2>/dev/null || true
+rm -rf ${TFMOD2_DIR}/.terraform 2>/dev/null || true
+rm -rf ${TFMOD1_DIR}/.terraform 2>/dev/null || true
 
 # Remove temporary files
 echo "Removing temporary_files directory..."
-rm -rf temporary_files 2>/dev/null || true
+rm -rf ${TEMPFILE_DIR} 2>/dev/null || true
+
+# Remove terraform_module1 directory (created during setup)
+echo "Removing terraform_module1 directory..."
+rm -rf ${TFMOD1_DIR} 2>/dev/null || true
+
+# Remove ANSWER_DIR if it's empty
+echo "Removing answer files directory if empty..."
+rmdir ${ANSWER_DIR} 2>/dev/null || true
 
 echo ""
 echo "##########################################################"
