@@ -20,8 +20,10 @@ ADMIN_KEY = os.environ.get('CLOUDAI_ADMIN_KEY', 'admin-secret-key')
 
 # Flag values from environment
 FLAGS = {
-    'FLAG1': os.environ.get('FLAG1', 'flag{dev_bucket_found}'),
-    'FLAG2': os.environ.get('FLAG2', 'flag{terraform_state_accessed}')
+    'FLAG1': os.environ.get('FLAG1', 'flag{nope-not-here}'),
+    'FLAG2': os.environ.get('FLAG2', 'flag{nice-try}'),
+    'FLAG3': os.environ.get('FLAG3', 'flag{im-sadge-you-got-to-this-point}'),
+    'FLAG4': os.environ.get('FLAG4', 'flag{ask-for-a-hint-cmon-:p}')
 }
 
 # Flag gating functions

@@ -19,7 +19,7 @@ resource "google_cloudfunctions2_function" "cloudai_portal" {
   name        = "cloudai-portal"
   description = "CloudAI Labs web portal - provides browser interface for all modules"
   location    = var.region
-  
+
   build_config {
     runtime     = "python39"
     entry_point = "cloudai_portal"
@@ -30,12 +30,12 @@ resource "google_cloudfunctions2_function" "cloudai_portal" {
       }
     }
   }
-  
+
   service_config {
     max_instance_count = 100
     available_memory   = "256M"
     timeout_seconds    = 60
-    
+
     environment_variables = {
       PROJECT_ID = var.project_id
       REGION     = var.region
@@ -45,12 +45,25 @@ resource "google_cloudfunctions2_function" "cloudai_portal" {
       # Link to monitoring function
       MONITORING_FUNCTION_URL = google_cloudfunctions2_function.function.service_config[0].uri
       # Flag values for module gating
-      FLAG1 = var.flag1_value
-      FLAG2 = var.flag2_value
+      FLAG1 = var.flag1_module2_key
+      FLAG2 = var.flag2_module3_key
+      FLAG3 = var.flag3_module4_key
+      FLAG4 = var.flag4_solve_module4
     }
-    
+
     # Use default compute service account (intentionally over-privileged)
     service_account_email = data.google_service_account.compute-account-module3.email
+  }
+}
+
+resource "google_project_organization_policy" "allow_public_access" {
+  project    = var.project_id
+  constraint = "iam.allowedPolicyMemberDomains"
+
+  list_policy {
+    allow {
+      all = true # This allows allUsers and allAuthenticatedUsers
+    }
   }
 }
 
@@ -65,16 +78,18 @@ resource "google_cloud_run_service_iam_member" "cloudai_portal_public" {
 
 # Output the portal URL
 output "cloudai_portal_url" {
-  value = google_cloudfunctions2_function.cloudai_portal.service_config[0].uri
+  value       = google_cloudfunctions2_function.cloudai_portal.service_config[0].uri
   description = "URL for the CloudAI Labs web portal"
 }
 
 # Output flag values for debugging (non-sensitive)
 output "flag_configuration" {
   value = {
-    flag1_value = var.flag1_value
-    flag2_value = var.flag2_value
+    flag1_value = var.flag1_module2_key
+    flag2_value = var.flag2_module3_key
+    flag3_value = var.flag3_module4_key
+    flag4_value = var.flag4_solve_module4
   }
   description = "Flag values configured for module gating"
-  sensitive = false
+  sensitive   = false
 }
