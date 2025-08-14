@@ -1,5 +1,7 @@
 # Archive a single file.
 
+# Archive a single file.
+
 data "archive_file" "main" {
   # https://cloud.google.com/functions/docs/writing/specifying-dependencies-python#packaging_local_dependencies
   type        = "zip"
@@ -23,6 +25,9 @@ resource "google_project_iam_member" "monitoring-function-editor" {
   member  = "serviceAccount:${google_service_account.monitoring-function.email}"
 }
 
+
+
+
 resource "google_storage_bucket" "cloud-function-bucket" {
   name          = format("cloud-function-bucket-module3-%s", var.project_id)
   location      = var.region
@@ -33,12 +38,6 @@ resource "google_storage_bucket_object" "gcs-function-file" {
   name   = "main.zip"
   bucket = google_storage_bucket.cloud-function-bucket.name
   source = data.archive_file.main.output_path
-}
-
-resource "google_storage_bucket_object" "flag2-part-c" {
-  name    = "flag2-part-C.txt"
-  bucket  = google_storage_bucket.cloud-function-bucket.name
-  content = "well-done-youre-very-close"
 }
 
 resource "google_cloudfunctions2_function" "function" {
@@ -77,3 +76,37 @@ resource "google_project_iam_member" "compute-account-run-viewer" {
   role    = "roles/run.viewer"
   member  = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
 }
+
+resource "google_project_iam_member" "compute-account-log-writer" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
+}
+
+
+resource "google_project_iam_member" "compute-account-log-viewer" {
+  project = var.project_id
+  role    = "roles/logging.privateLogViewer"
+  member  = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
+}
+
+resource "google_project_iam_member" "compute-account-cloudfunc-developer"  {
+  project = var.project_id
+  role    = "roles/cloudfunctions.developer"
+  member  = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
+}
+
+# Allow the project's default Compute Engine SA to read the Cloud Functions v2 staging bucket
+resource "google_storage_bucket_iam_member" "compute-account-gcf-v2-sources-object-viewer" {
+  bucket = format("gcf-v2-sources-%s-%s", var.project_number, var.region)
+  role   = "roles/storage.objectViewer"
+  member = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
+}
+
+resource "google_artifact_registry_repository_iam_member" "compute-engine-writer-gcf-artifacts" {
+  project    = var.project_id
+  location   = var.region
+  repository = "gcf-artifacts"
+  role       = "roles/artifactregistry.writer"
+  member  = format("serviceAccount:%s", data.google_service_account.compute-account-module3.email)
+  }
