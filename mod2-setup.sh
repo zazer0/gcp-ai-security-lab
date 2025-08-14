@@ -26,8 +26,6 @@ echo "flag{found-the-secret-infrastructure}" > temporary_files/flag2.txt
 gcloud storage cp temporary_files/flag2.txt gs://file-uploads-$PROJECT_ID/
 
 COMPUTE_IP=$(gcloud compute instances describe app-prod-instance-module2 --zone $ZONE --project $PROJECT_ID | grep natIP | awk '{print $2}')
-echo "You found flag 1!" > temporary_files/flag1.txt
-scp -i temporary_files/leaked_ssh_key -o StrictHostKeyChecking=no temporary_files/flag1.txt alice@$COMPUTE_IP:/home/alice/
 
 # Create and upload flag2-part-B.txt to the VM
 echo "good-job-now-look-around" > temporary_files/flag2-part-B.txt
