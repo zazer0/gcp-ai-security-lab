@@ -37,3 +37,6 @@ resource "google_service_account_iam_member" "terraform-pipeline-impersonator-ch
     expression  = "true"
   }
 }
+
+# TODO: Add compute instance named "flag3-attack-me" for Challenge 4
+# This will be the final instance that students need to attack in Module 4
