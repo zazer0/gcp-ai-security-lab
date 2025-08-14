@@ -81,5 +81,5 @@ output "flag_configuration" {
     flag4_value = var.flag4_solve_module4
   }
   description = "Flag values configured for module gating"
-  sensitive   = false
+  sensitive   = true
 }
