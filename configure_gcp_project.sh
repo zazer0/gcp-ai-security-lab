@@ -16,4 +16,4 @@ echo "Project API's enabled! "
 
 STARTYELLOW="\033[1;33m"
 ENDYELLOW="\033[0m"
-echo -e "${STARTYELLOW} Nice job! Now, run 'bash challenge-setup.sh' to deploy!${ENDYELLOW}
+echo -e "${STARTYELLOW} Nice job! Now, run 'bash challenge-setup.sh' to deploy!${ENDYELLOW}"
