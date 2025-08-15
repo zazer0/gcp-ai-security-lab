@@ -50,7 +50,7 @@ Each module follows a "Story → Attack → Fix" workflow:
 #### Module 1: Enumeration & Discovery (30 minutes)
 - **Attack**: Discover predictable bucket names, find leaked service account credentials
 - **Remediation**: Remove exposed credentials, implement proper IAM roles
-- **AI Context**: "CloudAI's 'secret' GPT-5 benchmarks leaked"
+- **AI Context**: "CloudAI's 'secret' GPT-6 benchmarks leaked"
 
 #### Module 2: Environment Secrets & State Exposure (1 hour)
 - **Attack**: Extract SSH keys from exposed terraform state file

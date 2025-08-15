@@ -11,7 +11,7 @@ A hands-on Google Cloud Platform (GCP) security workshop featuring 3 progressive
 ## 🎯 Challenge Overview
 
 ### Module 1: Cloud Storage Enumeration & Discovery
-- **Target**: Find leaked GPT-5 benchmark results
+- **Target**: Find leaked GPT-6 benchmark results
 - **Skills**: Bucket enumeration, service account privilege escalation
 - **Techniques**: Predictable naming patterns, credential discovery
 
