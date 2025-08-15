@@ -186,7 +186,7 @@ def deployment_status():
         return render_template('locked.html',
             module_num=2,
             module_name='System Status',
-            hint='Find the flag in the development bucket to unlock this module.'
+            hint='Find the flag from the previous module.'
         )
     
     deployments = [{
@@ -214,7 +214,7 @@ def monitoring_dashboard():
         return render_template('locked.html',
             module_num=3,
             module_name='Monitoring Dashboard',
-            hint='Find the flag in the terraform state file to unlock this module.'
+            hint='Find the previous flag to unlock this module'
         )
     
     return render_template('3-monitoring.html',
@@ -262,7 +262,14 @@ def admin_console():
     auth_header = request.headers.get('Authorization', '')
     token = auth_header.replace('Bearer ', '') if auth_header else None
     
-    if not token:
+    if not check_module_unlocked(4):
+        return render_template('locked.html',
+            module_num=4,
+            module_name='Admin Login',
+            hint='Find the previous flag to unlock this module'
+        )
+
+    elif not token:
         return render_template('4-admin_login.html',
             hint='Use the token obtained from the monitoring function'
         )

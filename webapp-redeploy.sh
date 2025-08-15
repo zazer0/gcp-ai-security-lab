@@ -110,8 +110,10 @@ print_status "$GREEN" "  Project Number: $PROJECT_NUMBER"
 print_elapsed
 
 # Step 2: Navigate to terraform directory
-print_status "$BLUE" "Step 2: Navigating to terraform directory..."
-cd terraform 2>/dev/null
+print_status "$BLUE" "Step 2: Navigating to ${TF_DIR} directory..."
+ANSWER_DIR=$(realpath .answerfiles-dontreadpls-spoilers-sadge)
+TF_DIR="${ANSWER_DIR}/terraform"
+cd "${TF_DIR}"
 check_success "terraform directory not found. Are you in the correct repository?"
 
 # Get region for use in IAM commands
