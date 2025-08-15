@@ -8,7 +8,7 @@ We keep our development and production environments strictly separated... or do 
 
 ## Your Goal
 
-**Find CloudAI's secret GPT-5 benchmark results that were supposedly leaked**
+**Find CloudAI's secret GPT-6 benchmark results that were supposedly leaked**
 
 ## Useful commands and tools:
 
